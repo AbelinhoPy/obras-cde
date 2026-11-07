@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Integral de Obras y Maquinaria - Ing. Civil CDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: #080c16; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    header { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 40px; height: 40px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: bold; }
+    .brand-title h2 { font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: -0.3px; }
+    .brand-title p { font-size: 11.5px; color: #94a3b8; }
+    
+    .nav-tabs { display: flex; gap: 6px; background: #1e293b; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
+    .nav-tab { background: transparent; border: none; color: #94a3b8; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .nav-tab.active { background: #f59e0b; color: #000; font-weight: 700; }
+
+    .main-grid { flex: 1; display: grid; grid-template-columns: 410px 1fr; gap: 20px; padding: 20px; max-width: 1560px; margin: 0 auto; width: 100%; }
+    
+    /* Celular Mockup */
+    .phone-container { background: #000; border-radius: 36px; padding: 10px; border: 4px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); height: 760px; display: flex; flex-direction: column; }
+    .phone-screen { background: #0b141a; border-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .wa-bar { background: #202c33; padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2a3942; }
+    .wa-avatar { width: 38px; height: 38px; border-radius: 50%; background: #f59e0b; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    
+    .chat-box { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#1f2c34 1px, transparent 1px); background-size: 18px 18px; }
+    .bubble { max-width: 85%; padding: 9px 13px; border-radius: 12px; font-size: 12.5px; line-height: 1.4; word-wrap: break-word; }
+    .b-client { background: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 2px; }
+    .b-bot { background: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 2px; }
+    .b-author { font-size: 10.5px; color: #53bdeb; font-weight: 600; margin-bottom: 2px; }
+    .b-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 3px; }
+
+    .scenario-bar { background: #111b21; padding: 8px 10px; border-top: 1px solid #222e35; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .sc-btn { background: #202c33; color: #cbd5e1; border: 1px solid #2a3942; padding: 6px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .sc-btn:hover { background: #f59e0b; color: #000; font-weight: 700; border-color: #f59e0b; }
+
+    .input-row { background: #202c33; padding: 10px; display: flex; gap: 8px; align-items: center; }
+    .text-input { flex: 1; background: #2a3942; border: none; outline: none; color: #fff; padding: 9px 14px; border-radius: 20px; font-size: 13px; }
+    .send-icon { width: 36px; height: 36px; border-radius: 50%; background: #00a884; border: none; color: #000; font-weight: bold; cursor: pointer; }
+
+    /* Dashboard Panels */
+    .dashboard { display: flex; flex-direction: column; gap: 16px; }
+    
+    .view-content { display: none; flex-direction: column; gap: 16px; }
+    .view-content.active { display: flex; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .stat-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 14px 16px; }
+    .stat-lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+    .stat-val { font-size: 24px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .stat-val.money { color: #4ade80; }
+    .stat-val.warn { color: #f59e0b; }
+
+    .table-container { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+    th { background: #1e293b; color: #94a3b8; padding: 12px 14px; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    td { padding: 12px 14px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
+    tr:last-child td { border-bottom: none; }
+    
+    .badge-status { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .b-presente { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .b-falta { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .b-vale { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .b-obra { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+
+    .obras-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .obra-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .obra-title { font-size: 14px; font-weight: 700; color: #f8fafc; display: flex; justify-content: space-between; }
+    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .progress-fill { height: 100%; background: #f59e0b; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">📐</div>
+      <div class="brand-title">
+        <h2>Ing. Civil Assistant & Control de Obras</h2>
+        <p>Obras CDE • Asistencia y Vales • Materiales • Alquiler de Bobcat</p>
+      </div>
+    </div>
+
+    <!-- Pestañas de Navegación -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="cambiarPestana('obras')">🏗️ Mis Obras</button>
+      <button class="nav-tab" onclick="cambiarPestana('personales')">👷 Personales & Vales (Sábado)</button>
+      <button class="nav-tab" onclick="cambiarPestana('materiales')">📦 Materiales</button>
+      <button class="nav-tab" onclick="cambiarPestana('bobcat')">🚜 Alquiler Bobcat</button>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- CELULAR WHATSAPP: ASISTENTE MULTIPROPÓSITO -->
+    <div class="phone-container">
+      <div class="phone-screen">
+        <div class="wa-bar">
+          <div class="wa-avatar">📐</div>
+          <div>
+            <h4 style="font-size: 13.5px; color: #e9edef;">Asistente de Obras CDE</h4>
+            <p style="font-size: 11px; color: #8696a0;">Voz, Lista, Entregas y Maquinaria</p>
+          </div>
+        </div>
+
+        <div class="chat-box" id="chat">
+          <div class="bubble b-client">
+            <div class="b-author">Ingeniero (Nota de Voz)</div>
+            🎙️ <em>"Anotá la lista de hoy en Obra Dúplex Km 10: Vinieron Juan, Marcos y Pedro. Silvio faltó. A Pedro dale 150 mil de vale para el sábado."</em>
+            <div class="b-time">07:45</div>
+          </div>
+          <div class="bubble b-bot">
+            <div class="b-author">🤖 Bot Asistente</div>
+            ¡Anotado Ing.! Registrado en <strong>Obra Dúplex Km 10</strong>:<br>
+            • ✅ <strong>Presentes (3):</strong> Juan, Marcos, Pedro<br>
+            • ❌ <strong>Ausente (1):</strong> Silvio<br>
+            • 💵 <strong>Vale descontable:</strong> 150.000 Gs. anotado a Pedro para la liquidación del sábado.<br><br>
+            Planilla de jornales actualizada automáticamente.
+            <div class="b-time">07:45</div>
+          </div>
+        </div>
+
+        <!-- ESCENARIOS RÁPIDOS PARA MOSTRAR -->
+        <div class="scenario-bar">
+          <button class="sc-btn" onclick="lanzarSimulacion('asistencia')">👷 Llamar Lista y Vales</button>
+          <button class="sc-btn" onclick="lanzarSimulacion('material')">🚚 Cemento Hernandarias</button>
+          <button class="sc-btn" onclick="lanzarSimulacion('avance')">📸 Avance Hormigonado</button>
+          <button class="sc-btn" onclick="lanzarSimulacion('bobcat')">🚜 Alquiler Bobcat 4h</button>
+        </div>
+
+        <div class="input-row">
+          <input type="text" id="waInput" class="text-input" placeholder="Manda un audio o escribe una nota..." onkeypress="if(event.key==='Enter')enviarManual()">
+          <button class="send-icon" onclick="enviarManual()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL DERECHO DINÁMICO SEGÚN PESTAÑA -->
+    <div class="dashboard">
+
+      <!-- PESTAÑA 1: MIS OBRAS EN CDE -->
+      <div id="view-obras" class="view-content active">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-lbl">🏗️ Obras Activas</div>
+            <div class="stat-val">3</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">👷 Personales en Obra Hoy</div>
+            <div class="stat-val" id="totalPersonalesHoy">14 operarios</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">📦 Entregas Esta Semana</div>
+            <div class="stat-val">6 cargas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">🚜 Bobcat Disponible</div>
+            <div class="stat-val" style="color: #4ade80;">Lista (CDE)</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 15px; margin-top: 8px;">Estado y Avance de Obras en Alto Paraná</h3>
+        
+        <div class="obras-grid">
+          <div class="obra-card">
+            <div class="obra-title">
+              <span>Edificio Residencial Km 8</span>
+              <span class="badge-status b-obra">En curso</span>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Km 8 Acaray, CDE</p>
+            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Losa 2do Piso</strong></div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 65%;"></div></div>
+            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
+              <span>Avance: 65%</span>
+              <span>6 Personales</span>
+            </div>
+          </div>
+
+          <div class="obra-card">
+            <div class="obra-title">
+              <span>Dúplex Modernos Km 10</span>
+              <span class="badge-status b-obra">En curso</span>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Km 10 Monday, CDE</p>
+            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Mampostería y revoque</strong></div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 40%;"></div></div>
+            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
+              <span>Avance: 40%</span>
+              <span>4 Personales</span>
+            </div>
+          </div>
+
+          <div class="obra-card">
+            <div class="obra-title">
+              <span>Galpón Industrial Hernandarias</span>
+              <span class="badge-status b-obra">En curso</span>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Hernandarias (Zona Industrial)</p>
+            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Movimiento de suelo con Bobcat</strong></div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 25%;"></div></div>
+            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
+              <span>Avance: 25%</span>
+              <span>4 Personales</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: ASISTENCIA Y JORNALES (PAGO DEL SÁBADO) -->
+      <div id="view-personales" class="view-content">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-lbl">💵 Vales Adelantados (Esta semana)</div>
+            <div class="stat-val warn" id="totalVales">550.000 Gs.</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">📅 Día de Pago de Jornales</div>
+            <div class="stat-val" style="font-size: 18px; color: #f59e0b;">Sábado 13:00 hs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">👷 Total Obreros en Lista</div>
+            <div class="stat-val">12 obreros</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">📊 Asistencia Promedio</div>
+            <div class="stat-val money">92%</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 15px;">Planilla de Asistencia Semanal y Liquidación de Vales</h3>
+          <span style="font-size: 12px; color: #94a3b8;">Se actualiza sola cuando mandas audio por WhatsApp</span>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Obrero</th>
+                <th>Obra Asignada</th>
+                <th>Cargo</th>
+                <th>Estado Hoy</th>
+                <th>Días Trabajados</th>
+                <th>Vales Solicitados</th>
+                <th>A Cobrar el Sábado</th>
+              </tr>
+            </thead>
+            <tbody id="tablaPersonales">
+              <tr>
+                <td><strong>Pedro Benítez</strong></td>
+                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
+                <td>Oficial Albañil</td>
+                <td><span class="badge-status b-presente">Presente</span></td>
+                <td>5 días</td>
+                <td style="color: #f59e0b; font-weight: 700;">150.000 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">850.000 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>Juan Almirón</strong></td>
+                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
+                <td>Ayudante</td>
+                <td><span class="badge-status b-presente">Presente</span></td>
+                <td>5 días</td>
+                <td>0 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">600.000 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>Marcos Vera</strong></td>
+                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
+                <td>Oficial Armador</td>
+                <td><span class="badge-status b-presente">Presente</span></td>
+                <td>5 días</td>
+                <td style="color: #f59e0b; font-weight: 700;">100.000 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">900.000 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>Silvio Duarte</strong></td>
+                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
+                <td>Ayudante</td>
+                <td><span class="badge-status b-falta">Faltó Hoy</span></td>
+                <td>4 días</td>
+                <td>0 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">480.000 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>Carlos Cabrera</strong></td>
+                <td><span class="badge-status b-obra">Edificio Km 8</span></td>
+                <td>Capataz General</td>
+                <td><span class="badge-status b-presente">Presente</span></td>
+                <td>5 días</td>
+                <td style="color: #f59e0b; font-weight: 700;">300.000 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">1.200.000 Gs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: MATERIALES Y ENTREGAS -->
+      <div id="view-materiales" class="view-content">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-lbl">🚚 Entregas Programadas</div>
+            <div class="stat-val">3 pendientes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">📦 Bolsas de Cemento en Obra</div>
+            <div class="stat-val">350 bolsas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">🏗️ Varillas de Hierro</div>
+            <div class="stat-val">4.500 kg</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">⚠️ Proveedores por Confirmar</div>
+            <div class="stat-val warn">1</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 15px;">Registro de Recepción y Remisiones de Materiales</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha/Hora</th>
+                <th>Material</th>
+                <th>Proveedor</th>
+                <th>Obra Destino</th>
+                <th>Responsable de Recepción</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tablaMateriales">
+              <tr>
+                <td>Mañana 08:00 hs</td>
+                <td><strong>200 bolsas Cemento Yguazú</strong></td>
+                <td>Distribuidora Alto Paraná</td>
+                <td>Hernandarias (Galpón)</td>
+                <td>Capataz Ramón</td>
+                <td><span class="badge-status b-vale">Programado</span></td>
+              </tr>
+              <tr>
+                <td>Jueves 14:00 hs</td>
+                <td><strong>Camión de Arena Lavada (12 m³)</strong></td>
+                <td>Cantera San Miguel</td>
+                <td>Dúplex Km 10</td>
+                <td>Oficial Pedro</td>
+                <td><span class="badge-status b-vale">Programado</span></td>
+              </tr>
+              <tr>
+                <td>Hoy 09:30 hs</td>
+                <td><strong>Varillas 10mm y 12mm (2.000 kg)</strong></td>
+                <td>Aceros CDE</td>
+                <td>Edificio Km 8</td>
+                <td>Ingeniero</td>
+                <td><span class="badge-status b-presente">✓ Recibido en Obra</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: ALQUILER BOBCAT -->
+      <div id="view-bobcat" class="view-content">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-lbl">🚜 Tarifa CDE</div>
+            <div class="stat-val">250.000 Gs./h</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">🚛 Traslado Flete</div>
+            <div class="stat-val">250.000 Gs.</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">💰 Facturación Bobcat Este Mes</div>
+            <div class="stat-val money">12.500.000 Gs.</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">👷 Operador Ramón</div>
+            <div class="stat-val" style="color: #38bdf8;">En servicio</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 15px;">Agenda de la Bobcat & Registro de Horas del Operador</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente / Obra</th>
+                <th>Lugar</th>
+                <th>Horas Pactadas</th>
+                <th>Horas Reales Ramón</th>
+                <th>Traslado</th>
+                <th>Total Facturado</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Arq. Walter Benítez</strong></td>
+                <td>Hernandarias (Las Mercedes)</td>
+                <td>4 horas</td>
+                <td><strong>5.0 hs reales</strong></td>
+                <td>250.000 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">1.500.000 Gs.</td>
+                <td><span class="badge-status b-presente">✓ Cobrado</span></td>
+              </tr>
+              <tr>
+                <td><strong>Don Gustavo Rojas</strong></td>
+                <td>CDE (Km 8 Acaray)</td>
+                <td>4 horas</td>
+                <td><strong>5.5 hs reales</strong></td>
+                <td>250.000 Gs.</td>
+                <td style="color: #4ade80; font-weight: 700;">1.625.000 Gs.</td>
+                <td><span class="badge-status b-presente">✓ Cobrado</span></td>
+              </tr>
+              <tr>
+                <td><strong>Don Celso (Minga)</strong></td>
+                <td>Minga Guazú (Km 16)</td>
+                <td>4 horas</td>
+                <td><em>Pendiente</em></td>
+                <td>250.000 Gs.</td>
+                <td style="color: #f59e0b; font-weight: 700;">1.250.000 Gs. (Est.)</td>
+                <td><span class="badge-status b-vale">Agendado Mañana</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function cambiarPestana(vista) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById('view-' + vista).classList.add('active');
+    }
+
+    function agregarMsg(txt, tipo, autor) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = `bubble ${tipo === 'bot' ? 'b-bot' : 'b-client'}`;
+      div.innerHTML = `
+        <div class="b-author">${autor}</div>
+        ${txt.replace(/\n/g, '<br>')}
+        <div class="b-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    const simulaciones = {
+      asistencia: {
+        in: '🎙️ [Audio WhatsApp]: "Anotá la lista de hoy en Obra Hernandarias: Vinieron Carlos, Wilson y Marcelo. Mario faltó. A Wilson dale 100.000 de vale."',
+        out: '¡Anotado Ing.! Lista de <strong>Obra Hernandarias</strong>:\n• ✅ Presentes (3): Carlos, Wilson, Marcelo\n• ❌ Ausente (1): Mario\n• 💵 Vale registrado: 100.000 Gs. a Wilson para el sábado.\n\nPlanilla actualizada.',
+        accion: () => {
+          cambiarPestanaManual('personales');
+          document.getElementById('totalVales').innerText = '650.000 Gs.';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>Wilson Silva</strong></td>
+            <td><span class="badge-status b-obra">Hernandarias</span></td>
+            <td>Oficial Albañil</td>
+            <td><span class="badge-status b-presente">Presente</span></td>
+            <td>5 días</td>
+            <td style="color: #f59e0b; font-weight: 700;">100.000 Gs.</td>
+            <td style="color: #4ade80; font-weight: 700;">750.000 Gs.</td>
+          `;
+          document.getElementById('tablaPersonales').prepend(tr);
+        }
+      },
+      material: {
+        in: 'Proveedor de Cemento: "Ingeniero, mañana a las 08:30 te llevamos las 150 bolsas de cemento a la obra de Km 8. Confirmame quién recibe."',
+        out: '¡Confirmado con el proveedor! Agendada entrega de 150 bolsas para mañana a las 08:30 en Obra Km 8.\n\nTarea pendiente generada: Designar encargado de recibir remisión.',
+        accion: () => {
+          cambiarPestanaManual('materiales');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>Mañana 08:30 hs</td>
+            <td><strong>150 bolsas Cemento</strong></td>
+            <td>Distribuidora CDE</td>
+            <td>Edificio Km 8</td>
+            <td>Por designar</td>
+            <td><span class="badge-status b-vale">Pendiente Responsable</span></td>
+          `;
+          document.getElementById('tablaMateriales').prepend(tr);
+        }
+      },
+      avance: {
+        in: 'Capataz Obra Km 8: "Patrón, terminamos de hormigonar la losa del segundo piso. Mañana dejamos curar y el lunes empezamos mampostería."',
+        out: '¡Excelente noticia! Registrado en bitácora de obra: <strong>Losa 2do Piso Hormigonada</strong> en Edificio Km 8.\nAvance de obra actualizado al 75%.',
+        accion: () => {
+          cambiarPestanaManual('obras');
+        }
+      },
+      bobcat: {
+        in: 'Cliente CDE: "Buenas, queremos alquilar la Bobcat para mañana 4 horas en Km 12 Monday."',
+        out: '¡Buenas! Agenda verificada: Bobcat libre mañana a la tarde en Km 12.\n• 4 horas: 1.000.000 Gs.\n• Traslado: 250.000 Gs.\n• Total: 1.250.000 Gs.\nAgendado con el operador Ramón.',
+        accion: () => {
+          cambiarPestanaManual('bobcat');
+        }
+      }
+    };
+
+    function lanzarSimulacion(key) {
+      const sim = simulaciones[key];
+      agregarMsg(sim.in, 'client', 'Audio / Mensaje WhatsApp');
+      setTimeout(() => {
+        agregarMsg(sim.out, 'bot', '🤖 Bot Asistente CDE');
+        if (sim.accion) sim.accion();
+      }, 600);
+    }
+
+    function cambiarPestanaManual(vista) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+
+      const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+      const targetTab = tabs.find(t => t.innerText.toLowerCase().includes(vista));
+      if (targetTab) targetTab.classList.add('active');
+      document.getElementById('view-' + vista).classList.add('active');
+    }
+
+    function enviarManual() {
+      const input = document.getElementById('waInput');
+      const val = input.value.trim();
+      if (!val) return;
+      agregarMsg(val, 'client', 'Ingeniero');
+      input.value = '';
+      setTimeout(() => {
+        agregarMsg("¡Mensaje recibido! Procesando intención (Obras / Asistencia / Materiales / Bobcat)...", 'bot', '🤖 Bot Asistente');
+      }, 500);
+    }
+  </script>
+</body>
+</html>

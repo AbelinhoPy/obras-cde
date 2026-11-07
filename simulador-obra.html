@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Asistente de Obra - Demo para Clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    header { background: #1e293b; border-bottom: 1px solid #334155; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .logo-badge { background: #f59e0b; color: #000; font-weight: 700; font-size: 12px; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; margin-right: 8px; }
+    .status-pill { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
+
+    .main-container { flex: 1; display: grid; grid-template-columns: 420px 1fr; gap: 24px; padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+    
+    /* Mockup Celular WhatsApp */
+    .phone-mockup { background: #000; border-radius: 36px; padding: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); border: 4px solid #334155; display: flex; flex-direction: column; height: 740px; }
+    .phone-screen { background: #0b141a; border-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .wa-header { background: #202c33; padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #2a3942; }
+    .wa-avatar { width: 40px; height: 40px; border-radius: 50%; background: #00a884; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .wa-info h4 { font-size: 15px; color: #e9edef; }
+    .wa-info p { font-size: 11px; color: #8696a0; }
+
+    .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: radial-gradient(#1f2c34 1px, transparent 1px); background-size: 20px 20px; }
+    .msg-bubble { max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; position: relative; word-wrap: break-word; }
+    .msg-in { background: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 2px; }
+    .msg-out { background: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 2px; }
+    .msg-sender { font-size: 11px; color: #53bdeb; margin-bottom: 3px; font-weight: 600; }
+    .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; }
+    .msg-tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); margin-top: 6px; color: #38bdf8; }
+
+    .quick-chips { padding: 10px 12px; background: #111b21; border-top: 1px solid #222e35; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .chip-btn { background: #202c33; color: #8696a0; border: 1px solid #2a3942; padding: 6px 10px; border-radius: 16px; font-size: 11px; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .chip-btn:hover { background: #00a884; color: #000; font-weight: 600; border-color: #00a884; }
+
+    .wa-input-bar { background: #202c33; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+    .wa-input { flex: 1; background: #2a3942; border: none; outline: none; color: #fff; padding: 10px 14px; border-radius: 20px; font-size: 13px; }
+    .send-btn { width: 38px; height: 38px; border-radius: 50%; background: #00a884; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
+
+    /* Panel Derecho: Tablero de Obra */
+    .dashboard-panel { display: flex; flex-direction: column; gap: 20px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .metric-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .metric-title { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-value { font-size: 28px; font-weight: 700; color: #f8fafc; }
+
+    .boards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; }
+    .board-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; }
+    .board-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #334155; }
+    .board-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    
+    .items-list { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 480px; }
+    .item-entry { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px; position: relative; }
+    .item-entry.agenda { border-left: 4px solid #3b82f6; }
+    .item-entry.tarea { border-left: 4px solid #f59e0b; }
+    .item-entry.revision { border-left: 4px solid #ef4444; }
+
+    .item-header { display: flex; justify-content: space-between; font-size: 13.5px; font-weight: 600; color: #f1f5f9; }
+    .item-meta { font-size: 12px; color: #94a3b8; display: flex; gap: 12px; }
+    .item-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+    .tag-blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .tag-amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .tag-red { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    .jopara-banner { background: linear-gradient(90deg, #1e3a8a, #0f766e); padding: 12px 20px; border-radius: 12px; border: 1px solid #38bdf8; display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="logo-badge">Asistente Pro</span>
+      <h2>Control de Obra y Agenda Inteligente</h2>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span>Servidor n8n conectado en puerto 5679</span>
+    </div>
+  </header>
+
+  <div class="main-container">
+    
+    <!-- MOCKUP CELULAR WHATSAPP -->
+    <div class="phone-mockup">
+      <div class="phone-screen">
+        <div class="wa-header">
+          <div class="wa-avatar">🏗️</div>
+          <div class="wa-info">
+            <h4>Bot Obra Central</h4>
+            <p>En línea • Asistente Activo</p>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat">
+          <div class="msg-bubble msg-in">
+            <div class="msg-sender">Sistema</div>
+            ¡Hola Arqui! Soy el bot de la obra. Registra entregas de materiales, audios de proveedores o notas rápidas por acá.
+            <div class="msg-time">Ahora</div>
+          </div>
+        </div>
+
+        <!-- BOTONES DE CASOS RÁPIDOS PARA MOSTRAR AL CLIENTE -->
+        <div class="quick-chips">
+          <button class="chip-btn" onclick="enviarPreset('hormigon')">🚛 Mixer Hormigón</button>
+          <button class="chip-btn" onclick="enviarPreset('jopara')">🇵🇾 Audio Jopará (Capataz)</button>
+          <button class="chip-btn" onclick="enviarPreset('varillas')">🏗️ Varillas de Hierro</button>
+          <button class="chip-btn" onclick="enviarPreset('planos')">📋 Planos Sanitarios</button>
+          <button class="chip-btn" onclick="enviarPreset('ambiguo')">❓ Ambiguo</button>
+        </div>
+
+        <div class="wa-input-bar">
+          <input type="text" id="mensajeInput" class="wa-input" placeholder="Escribe un mensaje o entrega..." onkeypress="handleKey(event)">
+          <button class="send-btn" onclick="enviarMensajeManual()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLERO DE CONTROL DE LA OBRA -->
+    <div class="dashboard-panel">
+      
+      <!-- Banner Jopará -->
+      <div class="jopara-banner">
+        <span>🇵🇾 <strong>Módulo Jopará Activo:</strong> Entiende audios en guaraní/español de capataces y choferes con IA.</span>
+        <span style="font-size: 11px; color: #bae6fd;">Zona horaria: America/Asuncion</span>
+      </div>
+
+      <!-- Métricas -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">📅 Entregas Agendadas</div>
+          <div class="metric-value" id="countAgenda">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">📌 Tareas Pendientes</div>
+          <div class="metric-value" id="countPendientes">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">⚠️ Requiere Revisión</div>
+          <div class="metric-value" id="countRevision">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">💬 Mensajes Procesados</div>
+          <div class="metric-value" id="countTotal">0</div>
+        </div>
+      </div>
+
+      <!-- Tableros de Agenda y Pendientes -->
+      <div class="boards-grid">
+        
+        <!-- Agenda de Entregas -->
+        <div class="board-card">
+          <div class="board-header">
+            <div class="board-title">📅 Agenda de Obra (Entregas y Visitas)</div>
+            <span class="item-tag tag-blue">Confirmados</span>
+          </div>
+          <div class="items-list" id="listaAgenda">
+            <p style="color: #64748b; font-size: 13px; text-align: center; margin-top: 40px;">No hay eventos agendados aún.</p>
+          </div>
+        </div>
+
+        <!-- Lista de Pendientes / Tareas -->
+        <div class="board-card">
+          <div class="board-header">
+            <div class="board-title">📌 Pendientes y Responsables</div>
+            <span class="item-tag tag-amber">Por resolver</span>
+          </div>
+          <div class="items-list" id="listaPendientes">
+            <p style="color: #64748b; font-size: 13px; text-align: center; margin-top: 40px;">No hay tareas pendientes.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const N8N_URL = 'http://127.0.0.1:5679';
+    let localState = { agenda: [], pendientes: [], revision: [], total: 0 };
+
+    const presets = {
+      hormigon: {
+        remitente: 'Hormigonera Central',
+        origen: 'mensaje',
+        texto: 'Confirmado Arqui, el mixer de hormigón llega el 12 de noviembre de 2026 a las 08:30. Avisame quién recibe la remisión.'
+      },
+      jopara: {
+        remitente: 'Don Pedro (Capataz)',
+        origen: 'audio_transcrito',
+        texto: '[Audio Jopará]: Eju ko\'ẽro las 09:00-pe og̃uahẽta la arena de cantera. Eavisa mávapa orrecibíta pe factura.'
+      },
+      varillas: {
+        remitente: 'Distribuidora Aceros',
+        origen: 'mensaje',
+        texto: 'El camión con las varillas llega el 13 de noviembre de 2026 a las 14:00. Necesitamos espacio para descargar.'
+      },
+      planos: {
+        remitente: 'Ing. Electricista',
+        origen: 'mensaje',
+        texto: 'Pasame la aprobación de los planos sanitarios cuando puedas para cerrar la cañería.'
+      },
+      ambiguo: {
+        remitente: 'Pintor',
+        origen: 'mensaje',
+        texto: 'Nos vemos la semana que viene para ver el revoque fino.'
+      }
+    };
+
+    function agregarBurbuja(texto, tipo, remitente = null, tag = null) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = `msg-bubble ${tipo === 'out' ? 'msg-out' : 'msg-in'}`;
+      
+      let html = '';
+      if (remitente) html += `<div class="msg-sender">${remitente}</div>`;
+      html += texto;
+      if (tag) html += `<br><span class="msg-tag">${tag}</span>`;
+      html += `<div class="msg-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+      
+      div.innerHTML = html;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function procesarEnvio(payload) {
+      agregarBurbuja(payload.texto, 'in', payload.remitente, payload.origen === 'audio_transcrito' ? '🎙️ Audio Transcrito' : null);
+      
+      try {
+        const resp = await fetch(`${N8N_URL}/webhook/agenda-mensaje`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.respuesta_sugerida) {
+            setTimeout(() => {
+              agregarBurbuja(data.respuesta_sugerida, 'out', '🤖 Bot de Obra (Sugerido)');
+            }, 500);
+          }
+          await actualizarResumen();
+        } else {
+          simulacionLocalFallback(payload);
+        }
+      } catch (e) {
+        simulacionLocalFallback(payload);
+      }
+    }
+
+    function simulacionLocalFallback(payload) {
+      // Fallback local en caso de restricciones de navegador
+      const id = payload.id;
+      localState.total++;
+      
+      let resSugerida = "Mensaje recibido y registrado en obra.";
+      if (payload.texto.includes('12 de noviembre')) {
+        localState.agenda.push({ titulo: 'Mixer Hormigón', fecha: '2026-11-12', hora: '08:30', contacto: payload.remitente });
+        localState.pendientes.push({ tarea: 'Asignar receptor de remisión', contacto: payload.remitente });
+        resSugerida = "Confirmado y agendado mixer para el 12 de noviembre 08:30. Estamos asignando quién lo recibe.";
+      } else if (payload.texto.includes('og̃uahẽta') || payload.texto.includes('arena')) {
+        localState.agenda.push({ titulo: 'Entrega Arena de Cantera (Jopará)', fecha: '2026-11-08', hora: '09:00', contacto: payload.remitente });
+        localState.pendientes.push({ tarea: 'Definir responsable de factura (mávapa orrecibíta)', contacto: payload.remitente });
+        resSugerida = "Recibido Don Pedro. Agendada la arena para las 09:00. Ya confirmamos quién recibe la factura.";
+      } else if (payload.texto.includes('13 de noviembre')) {
+        localState.agenda.push({ titulo: 'Descarga de Varillas', fecha: '2026-11-13', hora: '14:00', contacto: payload.remitente });
+        localState.pendientes.push({ tarea: 'Despejar espacio para descarga de varillas', contacto: payload.remitente });
+        resSugerida = "Agendado para el 13 de noviembre 14:00. Tendremos el espacio listo.";
+      } else if (payload.texto.includes('planos')) {
+        localState.pendientes.push({ tarea: 'Aprobar planos sanitarios para electricista', contacto: payload.remitente });
+        resSugerida = "Hola, recibido. En breve revisamos los planos sanitarios.";
+      } else {
+        localState.revision.push({ motivo: 'Fecha ambigua sin hora ni día', texto: payload.texto, contacto: payload.remitente });
+        resSugerida = "Hola, ¿qué día y horario te quedaría mejor la semana que viene para coordinar?";
+      }
+
+      setTimeout(() => {
+        agregarBurbuja(resSugerida, 'out', '🤖 Bot de Obra (Sugerido)');
+      }, 500);
+
+      renderizarTableros(localState.agenda, localState.pendientes, localState.revision, localState.total);
+    }
+
+    async function actualizarResumen() {
+      try {
+        const resp = await fetch(`${N8N_URL}/webhook/agenda-resumen`);
+        if (resp.ok) {
+          const data = await resp.json();
+          renderizarTableros(data.agenda, data.pendientes, data.revision, data.resumen.total_mensajes_unicos_procesados);
+        }
+      } catch (e) {
+        console.log('Usando estado sincronizado');
+      }
+    }
+
+    function renderizarTableros(agenda, pendientes, revision, total) {
+      document.getElementById('countAgenda').innerText = agenda.length;
+      document.getElementById('countPendientes').innerText = pendientes.length;
+      document.getElementById('countRevision').innerText = (revision || []).length;
+      document.getElementById('countTotal').innerText = total;
+
+      const listaAgenda = document.getElementById('listaAgenda');
+      if (agenda.length === 0) {
+        listaAgenda.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; margin-top: 40px;">No hay entregas agendadas aún.</p>';
+      } else {
+        listaAgenda.innerHTML = agenda.map(item => `
+          <div class="item-entry agenda">
+            <div class="item-header">
+              <span>${item.titulo}</span>
+              <span class="item-tag tag-blue">${item.hora} hs</span>
+            </div>
+            <div class="item-meta">
+              <span>📅 ${item.fecha}</span>
+              <span>👤 ${item.contacto || 'Obra'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const listaPendientes = document.getElementById('listaPendientes');
+      if (pendientes.length === 0) {
+        listaPendientes.innerHTML = '<p style="color: #64748b; font-size: 13px; text-align: center; margin-top: 40px;">No hay tareas pendientes.</p>';
+      } else {
+        listaPendientes.innerHTML = pendientes.map(item => `
+          <div class="item-entry tarea">
+            <div class="item-header">
+              <span>${item.tarea}</span>
+              <span class="item-tag tag-amber">Pendiente</span>
+            </div>
+            <div class="item-meta">
+              <span>👤 Asignado/Solicita: ${item.contacto || 'Coordinación'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function enviarPreset(tipo) {
+      const data = presets[tipo];
+      const payload = {
+        id: 'demo-' + Date.now(),
+        remitente: data.remitente,
+        origen: data.origen,
+        texto: data.texto
+      };
+      procesarEnvio(payload);
+    }
+
+    function enviarMensajeManual() {
+      const input = document.getElementById('mensajeInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const payload = {
+        id: 'demo-' + Date.now(),
+        remitente: 'Proveedor / Contratista',
+        origen: 'mensaje',
+        texto: val
+      };
+      input.value = '';
+      procesarEnvio(payload);
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter') enviarMensajeManual();
+    }
+
+    // Inicializar al cargar
+    actualizarResumen();
+  </script>
+</body>
+</html>

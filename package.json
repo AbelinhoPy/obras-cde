@@ -1,0 +1,13 @@
+{
+  "name": "sistema-obras-cde",
+  "version": "1.0.0",
+  "description": "Sistema de Control de Obras, Asistencia y Despacho de Bobcat para CDE (Neon + Vercel)",
+  "main": "api/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node api/local-server.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}

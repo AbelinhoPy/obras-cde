@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bobcat CDE - Control de Alquiler, Agenda y Reporte de Horas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: #080c16; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    header { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 38px; height: 38px; background: #f59e0b; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #000; }
+    .brand-title h2 { font-size: 17px; font-weight: 700; color: #f8fafc; }
+    .brand-title p { font-size: 11px; color: #94a3b8; }
+    
+    .rates-badge { display: flex; gap: 10px; }
+    .rate-pill { background: #1e293b; border: 1px solid #334155; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: #cbd5e1; }
+    .rate-pill strong { color: #f59e0b; }
+
+    .main-grid { flex: 1; display: grid; grid-template-columns: 410px 1fr; gap: 24px; padding: 24px; max-width: 1440px; margin: 0 auto; width: 100%; }
+    
+    /* Celular Mockup */
+    .phone-container { background: #000; border-radius: 36px; padding: 10px; border: 4px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); height: 750px; display: flex; flex-direction: column; }
+    .phone-screen { background: #0b141a; border-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .wa-bar { background: #202c33; padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2a3942; }
+    .wa-avatar { width: 38px; height: 38px; border-radius: 50%; background: #f59e0b; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    
+    .chat-box { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#1f2c34 1px, transparent 1px); background-size: 18px 18px; }
+    .bubble { max-width: 84%; padding: 9px 13px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
+    .b-client { background: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 2px; }
+    .b-bot { background: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 2px; }
+    .b-operator { background: #1e3a8a; color: #e9edef; align-self: flex-start; border-top-left-radius: 2px; border-left: 3px solid #38bdf8; }
+    .b-author { font-size: 10.5px; color: #53bdeb; font-weight: 600; margin-bottom: 2px; }
+    .b-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 3px; }
+
+    .scenario-bar { background: #111b21; padding: 8px 10px; border-top: 1px solid #222e35; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .sc-btn { background: #202c33; color: #94a3b8; border: 1px solid #2a3942; padding: 6px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .sc-btn:hover { background: #f59e0b; color: #000; font-weight: 600; border-color: #f59e0b; }
+    .sc-btn.operator-btn { background: #1e3a8a; color: #93c5fd; border-color: #3b82f6; }
+    .sc-btn.operator-btn:hover { background: #3b82f6; color: #fff; }
+
+    .input-row { background: #202c33; padding: 10px; display: flex; gap: 8px; align-items: center; }
+    .text-input { flex: 1; background: #2a3942; border: none; outline: none; color: #fff; padding: 9px 14px; border-radius: 20px; font-size: 13px; }
+    .send-icon { width: 36px; height: 36px; border-radius: 50%; background: #00a884; border: none; color: #000; font-weight: bold; cursor: pointer; }
+
+    /* Panel de Gestión */
+    .dashboard { display: flex; flex-direction: column; gap: 18px; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .stat-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 14px 16px; }
+    .stat-lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+    .stat-val { font-size: 24px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+    .stat-val.money { color: #4ade80; }
+
+    .board-container { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; }
+    .panel-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; }
+    .panel-title { font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+    .job-card { background: #080c16; border: 1px solid #1e293b; border-left: 4px solid #f59e0b; border-radius: 10px; padding: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px; }
+    .job-card.completed { border-left-color: #10b981; background: #051614; }
+    .job-top { display: flex; justify-content: space-between; font-weight: 700; font-size: 13.5px; color: #f8fafc; }
+    .job-details { font-size: 12px; color: #94a3b8; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .job-tag { display: inline-block; background: rgba(245, 158, 11, 0.15); color: #fbbf24; font-size: 10.5px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+    .job-tag.done { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    
+    /* Ficha y Registro del Operador */
+    .operator-ticket { background: #131d31; border: 1px dashed #38bdf8; border-radius: 10px; padding: 14px; font-family: monospace; font-size: 12px; line-height: 1.5; color: #e2e8f0; }
+    .operator-ticket h5 { color: #38bdf8; font-size: 13px; margin-bottom: 6px; font-family: 'Inter', sans-serif; display: flex; justify-content: space-between; }
+    .btn-wa-operator { margin-top: 10px; background: #25d366; color: #000; font-weight: 700; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+    .horometro-box { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-top: 14px; }
+    .horometro-title { font-size: 12px; font-weight: 700; color: #facc15; text-transform: uppercase; margin-bottom: 6px; }
+    .horometro-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; }
+
+    .badge-cde { background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🚜</div>
+      <div class="brand-title">
+        <h2>Bobcat CDE - Alquiler y Control de Operaciones</h2>
+        <p>Ciudad del Este • Hernandarias • Minga Guazú • Presidente Franco</p>
+      </div>
+    </div>
+    <div class="rates-badge">
+      <div class="rate-pill">Tarifa: <strong>250.000 Gs./h</strong></div>
+      <div class="rate-pill">Traslado: <strong>250.000 Gs.</strong></div>
+      <div class="rate-pill">Zona: <strong>Alto Paraná</strong></div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- CELULAR WHATSAPP: CLIENTE, BOT Y OPERADOR -->
+    <div class="phone-container">
+      <div class="phone-screen">
+        <div class="wa-bar">
+          <div class="wa-avatar">🚜</div>
+          <div>
+            <h4 style="font-size: 14px; color: #e9edef;">Bobcat Alquiler CDE</h4>
+            <p style="font-size: 11px; color: #8696a0;">Cotizador, Agenda y Cierre de Horas</p>
+          </div>
+        </div>
+
+        <div class="chat-box" id="chat">
+          <div class="bubble b-client">
+            <div class="b-author">Cliente (Km 7 Ciudad Nueva)</div>
+            ¡Buenas tardes! ¿Tienen libre la Bobcat para mañana a la mañana? ¿Cuánto me sale con traslado?
+            <div class="b-time">14:00</div>
+          </div>
+          <div class="bubble b-bot">
+            <div class="b-author">🤖 Bot Comercial CDE</div>
+            ¡Buenas tardes! Sí, verificamos disponibilidad: mañana tenemos libre el turno mañana desde las 07:30 hs.<br><br>
+            • <strong>Tarifa hora:</strong> 250.000 Gs./h<br>
+            • <strong>Traslado en CDE:</strong> 250.000 Gs.<br><br>
+            Decime cuántas horas estimás de trabajo y la ubicación exacta para agendarte con el operador Ramón.
+            <div class="b-time">14:00</div>
+          </div>
+        </div>
+
+        <!-- ESCENARIOS INTERACTIVOS -->
+        <div class="scenario-bar">
+          <button class="sc-btn" onclick="lanzarEscenario('reservaMinga')">📅 Reserva Minga (Km 16)</button>
+          <button class="sc-btn" onclick="lanzarEscenario('choqueHorario')">⚠️ Horario Ocupado</button>
+          <button class="sc-btn" onclick="lanzarEscenario('joparaFranco')">🇵🇾 Jopará Pto. Franco</button>
+          <button class="sc-btn operator-btn" onclick="lanzarEscenario('cierreOperador')">👷 Ramón Anota Horas Reales</button>
+        </div>
+
+        <div class="input-row">
+          <input type="text" id="waInput" class="text-input" placeholder="Escribe un mensaje de cliente u operador..." onkeypress="if(event.key==='Enter')enviarManual()">
+          <button class="send-icon" onclick="enviarManual()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL PRINCIPAL DE GESTIÓN Y OPERADOR -->
+    <div class="dashboard">
+
+      <!-- Métricas del Negocio en CDE -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-lbl">🚜 Servicios Confirmados</div>
+          <div class="stat-val" id="totalServicios">2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">⏱️ Horas Reales Trabajadas</div>
+          <div class="stat-val" id="totalHoras">9 h</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">💰 Facturación Total CDE</div>
+          <div class="stat-val money" id="totalGs">2.750.000 Gs.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">👷 Operador de Máquina</div>
+          <div class="stat-val" style="font-size: 18px; color: #38bdf8;">Ramón (En Servicio)</div>
+        </div>
+      </div>
+
+      <div class="board-container">
+        
+        <!-- COLUMNA 1: AGENDA DE LA BOBCAT Y HORARIOS DISPONIBLES -->
+        <div class="panel-box">
+          <div class="panel-title">
+            <span>📅 Agenda de la Bobcat (Horarios CDE)</span>
+            <span class="badge-cde">Verificación Anticolisión</span>
+          </div>
+          
+          <div id="listaServicios" style="overflow-y: auto; max-height: 470px;">
+            
+            <div class="job-card" id="card-job-1">
+              <div class="job-top">
+                <span>Nivelación de terreno y carga</span>
+                <span class="job-tag">Mañana 07:30 - 11:30 hs</span>
+              </div>
+              <div class="job-details">
+                <div>📍 <strong>Zona:</strong> CDE (Km 8 Acaray)</div>
+                <div>👤 <strong>Cliente:</strong> Don Gustavo Rojas</div>
+                <div>⏱️ <strong>Horas pactadas:</strong> 4 horas (1.000.000 Gs.)</div>
+                <div>🚛 <strong>Traslado:</strong> 250.000 Gs.</div>
+              </div>
+              <div style="font-size: 11px; color: #4ade80; font-weight: 700; border-top: 1px solid #1e293b; padding-top: 6px; display: flex; justify-content: space-between;" id="job1-footer">
+                <span>Total estimado: 1.250.000 Gs.</span>
+                <span style="color: #facc15;">⏳ En espera de ejecución</span>
+              </div>
+            </div>
+
+            <div class="job-card completed">
+              <div class="job-top">
+                <span>Limpieza de lote y retiro de maleza</span>
+                <span class="job-tag done">Finalizado Hoy</span>
+              </div>
+              <div class="job-details">
+                <div>📍 <strong>Zona:</strong> Hernandarias (B° Las Mercedes)</div>
+                <div>👤 <strong>Cliente:</strong> Ing. Walter Benítez</div>
+                <div>⏱️ <strong>Horas trabajadas:</strong> 5 horas reales</div>
+                <div>🚛 <strong>Traslado:</strong> 250.000 Gs.</div>
+              </div>
+              <div style="font-size: 11px; color: #4ade80; font-weight: 700; border-top: 1px solid #1e293b; padding-top: 6px; display: flex; justify-content: space-between;">
+                <span>Total cobrado: 1.500.000 Gs.</span>
+                <span style="color: #34d399;">✓ Ramón anotó 5h (Cobrado)</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- COLUMNA 2: DESPACHO AL OPERADOR Y CIERRE DE HORAS REALES -->
+        <div class="panel-box">
+          <div class="panel-title">
+            <span>👷 Control del Operador Ramón</span>
+            <span style="font-size: 11px; color: #94a3b8;">Despacho + Horómetro</span>
+          </div>
+
+          <!-- Ficha de Despacho -->
+          <div class="operator-ticket" id="ticketOperador">
+            <h5>🚜 HOJA DE RUTA CDE - SERVICIO ACTIVO <span>[CONFIRMADO]</span></h5>
+            ------------------------------------------<br>
+            👷 <strong>OPERADOR:</strong> Ramón<br>
+            📅 <strong>FECHA/HORA:</strong> Mañana Miércoles 07:30 hs<br>
+            📍 <strong>LUGAR:</strong> Km 8 Acaray c/ Calle San José (CDE)<br>
+            👤 <strong>CONTACTO:</strong> Don Gustavo Rojas (0983-122-334)<br>
+            ⚙️ <strong>TAREA:</strong> Nivelación de lote<br>
+            ⏱️ <strong>HORAS ESTIMADAS:</strong> 4 horas<br>
+            💰 <strong>TARIFA:</strong> 250.000 Gs/h + 250.000 Gs traslado.<br>
+            ------------------------------------------
+            <button class="btn-wa-operator" onclick="alert('¡Ficha de Km 8 enviada al WhatsApp de Ramón!')">
+              📲 Enviar esta Orden por WhatsApp a Ramón
+            </button>
+          </div>
+
+          <!-- Módulo de Horómetro / Horas Reales Trabajadas -->
+          <div class="horometro-box">
+            <div class="horometro-title">⏱️ El Operador anota sus horas trabajadas</div>
+            <p class="horometro-desc">
+              Cuando Ramón termina el trabajo, manda un mensaje o audio por WhatsApp:<br>
+              <em style="color: #cbd5e1;">"Patrón, terminamos acá en Km 8. Al final nos quedamos 5 horas y media porque pidió abrir una zanja más."</em><br><br>
+              El bot calcula automáticamente las <strong>5.5 horas x 250.000 Gs. + 250.000 Gs. traslado = 1.625.000 Gs.</strong> y le dice a Ramón cuánto debe cobrar en mano antes de subir la Bobcat al carretón.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let totalGs = 2750000;
+    let totalHoras = 9;
+    let totalServicios = 2;
+
+    const escenarios = {
+      reservaMinga: {
+        tipo: 'client',
+        cliente: 'Don Celso (Minga Guazú)',
+        texto: 'Hola, necesito la Bobcat para pasado mañana jueves a las 08:00 en Minga Guazú, Km 16 lado Acaray. Serían 4 horas de trabajo para limpieza de patio.',
+        botResp: '¡Confirmado Don Celso! Verificamos la agenda: el jueves 08:00 hs la Bobcat está libre para Minga Guazú (Km 16).\n\n• 4 horas estimadas: 1.000.000 Gs. (250.000 Gs./h)\n• Traslado Minga Guazú: 250.000 Gs.\n• Total estimado: 1.250.000 Gs.\n\nAgendado con el operador Ramón. Si allá se trabaja alguna hora extra, Ramón anota el tiempo al finalizar para la liquidación final.',
+        horas: 4,
+        costo: 1250000,
+        zona: 'Minga Guazú (Km 16 Acaray)',
+        tarea: 'Limpieza de patio'
+      },
+      choqueHorario: {
+        tipo: 'client',
+        cliente: 'Constructora Franco',
+        texto: 'Buenas, queremos la Bobcat para mañana miércoles a las 09:00 en Presidente Franco.',
+        botResp: '¡Buenas! Verificando la agenda de la máquina: Mañana de 07:30 a 11:30 la Bobcat ya está ocupada en un trabajo en CDE (Km 8 Acaray).\n\nPodemos asignarte a partir de las 13:00 hs de la tarde o el jueves a primera hora. ¿Te sirve mañana a las 13:00 hs en Presidente Franco?',
+        horas: 0,
+        costo: 0,
+        zona: 'Presidente Franco',
+        tarea: 'Consulta de horario'
+      },
+      joparaFranco: {
+        tipo: 'client',
+        cliente: 'Don Ramón Peralta (Pto. Franco)',
+        texto: '[Audio Jopará]: Mba\'eichapa patrón. Aipotata la Bobcat viernes pyhareve 08:00-pe Franco-pe. 3 horas jaipuruta orretira haguã la yvy.',
+        botResp: '¡Mba\'eichapa Don Ramón! Verificada la disponibilidad: Viernes 08:00 hs está libre en Presidente Franco.\n\n• 3 horas: 750.000 Gs. (250.000 Gs./h)\n• Traslado a Franco: 250.000 Gs.\n• Total estimado: 1.000.000 Gs.\n\nAgendado para el viernes temprano.',
+        horas: 3,
+        costo: 1000000,
+        zona: 'Pte. Franco (B° San Sebastián)',
+        tarea: 'Retiro de tierra (Yvy retiro)'
+      },
+      cierreOperador: {
+        tipo: 'operator',
+        cliente: '👷 Ramón (Operador)',
+        texto: 'Patrón, terminamos acá el trabajo de Don Gustavo en Km 8. Al final nos pidió emparejar el fondo también, trabajamos 5 horas y media (5.5 hs) en total.',
+        botResp: '¡Excelente Ramón! Registrado en el sistema:\n\n• Horas pactadas: 4 hs\n• Horas reales trabajadas: 5.5 hs\n• 5.5 hs x 250.000 = 1.375.000 Gs.\n• Traslado: 250.000 Gs.\n• TOTAL FINAL A COBRAR: 1.625.000 Gs.\n\nPor favor cobra 1.625.000 Gs. en efectivo o pedile el comprobante de transferencia bancaria antes de subir la Bobcat al carretón.',
+        horasExtra: 1.5,
+        costoExtra: 375000
+      }
+    };
+
+    function agregarMsg(txt, tipo, remitente) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      
+      let bubbleClass = 'b-client';
+      if (tipo === 'bot') bubbleClass = 'b-bot';
+      else if (tipo === 'operator') bubbleClass = 'b-operator';
+
+      div.className = `bubble ${bubbleClass}`;
+      div.innerHTML = `
+        <div class="b-author">${remitente}</div>
+        ${txt.replace(/\n/g, '<br>')}
+        <div class="b-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+      `;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function lanzarEscenario(key) {
+      const sc = escenarios[key];
+      agregarMsg(sc.texto, sc.tipo, sc.cliente);
+
+      setTimeout(() => {
+        agregarMsg(sc.botResp, 'bot', '🤖 Bot Comercial CDE');
+
+        if (key === 'cierreOperador') {
+          // Actualizar tarjeta existente de Gustavo con las horas reales
+          totalHoras += sc.horasExtra;
+          totalGs += sc.costoExtra;
+          document.getElementById('totalHoras').innerText = totalHoras + ' h';
+          document.getElementById('totalGs').innerText = totalGs.toLocaleString('es-PY') + ' Gs.';
+
+          const card = document.getElementById('card-job-1');
+          card.className = 'job-card completed';
+          document.getElementById('job1-footer').innerHTML = `
+            <span>Total final cobrado: 1.625.000 Gs.</span>
+            <span style="color: #34d399;">✓ Ramón anotó 5.5h (Cerrado)</span>
+          `;
+          return;
+        }
+
+        if (sc.horas > 0) {
+          totalServicios++;
+          totalHoras += sc.horas;
+          totalGs += sc.costo;
+
+          document.getElementById('totalServicios').innerText = totalServicios;
+          document.getElementById('totalHoras').innerText = totalHoras + ' h';
+          document.getElementById('totalGs').innerText = totalGs.toLocaleString('es-PY') + ' Gs.';
+
+          // Agregar nueva reserva
+          const lista = document.getElementById('listaServicios');
+          const nuevo = document.createElement('div');
+          nuevo.className = 'job-card';
+          nuevo.innerHTML = `
+            <div class="job-top">
+              <span>${sc.tarea}</span>
+              <span class="job-tag">Horario Confirmado</span>
+            </div>
+            <div class="job-details">
+              <div>📍 <strong>Zona:</strong> ${sc.zona}</div>
+              <div>👤 <strong>Cliente:</strong> ${sc.cliente}</div>
+              <div>⏱️ <strong>Duración:</strong> ${sc.horas} horas pactadas</div>
+              <div>🚛 <strong>Traslado:</strong> 250.000 Gs.</div>
+            </div>
+            <div style="font-size: 11px; color: #4ade80; font-weight: 700; border-top: 1px solid #1e293b; padding-top: 6px; display: flex; justify-content: space-between;">
+              <span>Total estimado: ${sc.costo.toLocaleString('es-PY')} Gs.</span>
+              <span>Estado: Agendado</span>
+            </div>
+          `;
+          lista.prepend(nuevo);
+
+          // Actualizar Ticket Operador
+          document.getElementById('ticketOperador').innerHTML = `
+            <h5>🚜 HOJA DE RUTA CDE - NUEVA RESERVA <span>[ALERTA]</span></h5>
+            ------------------------------------------<br>
+            👷 <strong>OPERADOR:</strong> Ramón<br>
+            📅 <strong>FECHA/HORA:</strong> ${sc.tarea}<br>
+            📍 <strong>LUGAR:</strong> ${sc.zona}<br>
+            👤 <strong>CONTACTO:</strong> ${sc.cliente}<br>
+            ⏱️ <strong>HORAS PACTADAS:</strong> ${sc.horas} horas (250.000 Gs/h)<br>
+            🚛 <strong>TRASLADO CDE:</strong> 250.000 Gs.<br>
+            💰 <strong>BASE:</strong> ${sc.costo.toLocaleString('es-PY')} Gs.<br>
+            ⚠️ <em>Al terminar, envía tu reporte de horas reales trabajadas por acá.</em><br>
+            ------------------------------------------
+            <button class="btn-wa-operator" onclick="alert('¡Ficha de ${sc.zona} enviada a Ramón!')">
+              📲 Enviar esta Orden por WhatsApp a Ramón
+            </button>
+          `;
+        }
+      }, 600);
+    }
+
+    function enviarManual() {
+      const input = document.getElementById('waInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      agregarMsg(val, 'client', 'Cliente CDE');
+      input.value = '';
+
+      setTimeout(() => {
+        agregarMsg("¡Buenas! Tarifa Bobcat en CDE y alrededores: 250.000 Gs./h + 250.000 Gs. de traslado. Por favor decinos fecha, hora y barrio para verificar disponibilidad en la agenda.", 'bot', '🤖 Bot Comercial CDE');
+      }, 600);
+    }
+  </script>
+</body>
+</html>
