@@ -3,544 +3,1401 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema Integral de Obras y Maquinaria - Ing. Civil CDE</title>
+  <title>Constructora & Maquinaria CDE - Sistema de Gestión de Obras</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: #080c16; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
-    
-    header { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon { width: 40px; height: 40px; background: #f59e0b; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #000; font-weight: bold; }
-    .brand-title h2 { font-size: 17px; font-weight: 800; color: #f8fafc; letter-spacing: -0.3px; }
-    .brand-title p { font-size: 11.5px; color: #94a3b8; }
-    
-    .nav-tabs { display: flex; gap: 6px; background: #1e293b; padding: 4px; border-radius: 10px; border: 1px solid #334155; }
-    .nav-tab { background: transparent; border: none; color: #94a3b8; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .nav-tab.active { background: #f59e0b; color: #000; font-weight: 700; }
+    :root {
+      --bg-main: #090d16;
+      --bg-sidebar: #0f172a;
+      --bg-card: #131d31;
+      --bg-card-hover: #18243d;
+      --border-color: #22314d;
+      --accent-primary: #f59e0b; /* Amber construcción */
+      --accent-hover: #d97706;
+      --accent-green: #10b981;
+      --accent-blue: #38bdf8;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
 
-    .main-grid { flex: 1; display: grid; grid-template-columns: 410px 1fr; gap: 20px; padding: 20px; max-width: 1560px; margin: 0 auto; width: 100%; }
-    
-    /* Celular Mockup */
-    .phone-container { background: #000; border-radius: 36px; padding: 10px; border: 4px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); height: 760px; display: flex; flex-direction: column; }
-    .phone-screen { background: #0b141a; border-radius: 28px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .wa-bar { background: #202c33; padding: 12px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #2a3942; }
-    .wa-avatar { width: 38px; height: 38px; border-radius: 50%; background: #f59e0b; color: #000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-    
-    .chat-box { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#1f2c34 1px, transparent 1px); background-size: 18px 18px; }
-    .bubble { max-width: 85%; padding: 9px 13px; border-radius: 12px; font-size: 12.5px; line-height: 1.4; word-wrap: break-word; }
-    .b-client { background: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 2px; }
-    .b-bot { background: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 2px; }
-    .b-author { font-size: 10.5px; color: #53bdeb; font-weight: 600; margin-bottom: 2px; }
-    .b-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 3px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); }
+    body { background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-    .scenario-bar { background: #111b21; padding: 8px 10px; border-top: 1px solid #222e35; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-    .sc-btn { background: #202c33; color: #cbd5e1; border: 1px solid #2a3942; padding: 6px 10px; border-radius: 14px; font-size: 11px; white-space: nowrap; cursor: pointer; transition: 0.2s; }
-    .sc-btn:hover { background: #f59e0b; color: #000; font-weight: 700; border-color: #f59e0b; }
+    /* SIDEBAR */
+    aside {
+      width: 270px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+    }
 
-    .input-row { background: #202c33; padding: 10px; display: flex; gap: 8px; align-items: center; }
-    .text-input { flex: 1; background: #2a3942; border: none; outline: none; color: #fff; padding: 9px 14px; border-radius: 20px; font-size: 13px; }
-    .send-icon { width: 36px; height: 36px; border-radius: 50%; background: #00a884; border: none; color: #000; font-weight: bold; cursor: pointer; }
+    .brand {
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; color: #fff; }
+    .brand-text p { font-size: 11px; color: var(--accent-primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* Dashboard Panels */
-    .dashboard { display: flex; flex-direction: column; gap: 16px; }
-    
-    .view-content { display: none; flex-direction: column; gap: 16px; }
-    .view-content.active { display: flex; }
+    .nav-list {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      overflow-y: auto;
+    }
+    .nav-category {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 12px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+    }
+    .nav-item.active {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--accent-primary);
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+    .nav-item .icon { font-size: 17px; }
 
-    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    .stat-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 14px 16px; }
-    .stat-lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
-    .stat-val { font-size: 24px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
-    .stat-val.money { color: #4ade80; }
-    .stat-val.warn { color: #f59e0b; }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      background: #0b1120;
+    }
+    .db-status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
 
-    .table-container { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
-    th { background: #1e293b; color: #94a3b8; padding: 12px 14px; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    td { padding: 12px 14px; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
-    tr:last-child td { border-bottom: none; }
-    
-    .badge-status { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .b-presente { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    .b-falta { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-    .b-vale { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-    .b-obra { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    /* MAIN CONTENT */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: radial-gradient(circle at top right, #111a2e 0%, #090d16 65%);
+    }
 
-    .obras-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .obra-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-    .obra-title { font-size: 14px; font-weight: 700; color: #f8fafc; display: flex; justify-content: space-between; }
-    .progress-bar { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 4px; }
-    .progress-fill { height: 100%; background: #f59e0b; border-radius: 3px; }
+    /* TOP HEADER */
+    header {
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-title h2 { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.4px; }
+    .header-title p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--accent-primary);
+      color: #000;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover {
+      background: #27354f;
+      color: #fff;
+    }
+    .btn-success {
+      background: #059669;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #10b981;
+    }
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 11.5px;
+    }
+
+    /* VIEWS CONTAINER */
+    .view-container {
+      padding: 26px 28px;
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .view-container.active {
+      display: flex;
+    }
+
+    /* METRICS / STATS CARDS */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: #33476d; }
+    .stat-icon {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      font-size: 24px;
+      opacity: 0.3;
+    }
+    .stat-label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-number { font-size: 26px; font-weight: 800; color: #fff; font-family: var(--font-mono); }
+    .stat-number.gold { color: #f59e0b; }
+    .stat-number.green { color: #34d399; }
+    .stat-sub { font-size: 11.5px; color: #64748b; }
+
+    /* DATA TABLES */
+    .panel-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .panel-header h3 { font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 9px; }
+    .panel-header p { font-size: 12px; color: var(--text-muted); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    thead th {
+      background: #0f182b;
+      padding: 13px 18px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    tbody tr {
+      border-bottom: 1px solid #19263f;
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 13px 18px; color: #e2e8f0; vertical-align: middle; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* OBRAS CARDS GRID */
+    .obras-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .obra-item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+    .obra-item-card:hover { border-color: #384e7a; }
+    .obra-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .obra-name { font-size: 16px; font-weight: 800; color: #fff; }
+    .obra-loc { font-size: 12px; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .progress-track { width: 100%; height: 8px; background: #1e293b; border-radius: 6px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #10b981); border-radius: 6px; }
+
+    /* MODALS */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal-box {
+      background: #111a2e;
+      border: 1px solid #2a3c61;
+      border-radius: 16px;
+      width: 520px;
+      max-width: 90vw;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      overflow: hidden;
+      animation: modalSlide 0.25s ease;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0d1527;
+    }
+    .modal-header h4 { font-size: 16px; font-weight: 800; color: #fff; }
+    .close-btn { background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; }
+    .modal-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 15px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12px; font-weight: 700; color: #cbd5e1; }
+    .form-input, .form-select {
+      background: #090e1a;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent-primary); }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #0d1527;
+    }
+
+    /* WHATSAPP ACTIVITY FEED */
+    .feed-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid #1a2742;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .feed-body { flex: 1; }
+    .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .feed-author { font-size: 13px; font-weight: 700; color: #38bdf8; }
+    .feed-time { font-size: 11px; color: #64748b; font-family: var(--font-mono); }
+    .feed-orig { font-size: 12.5px; color: #cbd5e1; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; margin-top: 4px; border-left: 3px solid #22c55e; }
+    .feed-action { font-size: 12px; color: #a7f3d0; margin-top: 5px; font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <header>
+  <!-- SIDEBAR DE NAVEGACIÓN EMPRESARIAL -->
+  <aside>
     <div class="brand">
-      <div class="brand-icon">📐</div>
-      <div class="brand-title">
-        <h2>Ing. Civil Assistant & Control de Obras</h2>
-        <p>Obras CDE • Asistencia y Vales • Materiales • Alquiler de Bobcat</p>
+      <div class="brand-icon">🚜</div>
+      <div class="brand-text">
+        <h1>INGENIERÍA & OBRAS</h1>
+        <p>Ciudad del Este • CDE</p>
       </div>
     </div>
 
-    <!-- Pestañas de Navegación -->
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="cambiarPestana('obras')">🏗️ Mis Obras</button>
-      <button class="nav-tab" onclick="cambiarPestana('personales')">👷 Personales & Vales (Sábado)</button>
-      <button class="nav-tab" onclick="cambiarPestana('materiales')">📦 Materiales</button>
-      <button class="nav-tab" onclick="cambiarPestana('bobcat')">🚜 Alquiler Bobcat</button>
+    <div class="nav-list">
+      <div class="nav-category">Principal</div>
+      <div class="nav-item active" onclick="mostrarSeccion('resumen')">
+        <span class="icon">📊</span> Panel Ejecutivo
+      </div>
+      <div class="nav-item" onclick="mostrarSeccion('obras')">
+        <span class="icon">🏗️</span> Mis Obras
+      </div>
+
+      <div class="nav-category">Personal y Pagos</div>
+      <div class="nav-item" onclick="mostrarSeccion('personales')">
+        <span class="icon">👷</span> Planilla Jornales & Vales
+      </div>
+
+      <div class="nav-category">Maquinaria & Despacho</div>
+      <div class="nav-item" onclick="mostrarSeccion('bobcat')">
+        <span class="icon">🚜</span> Alquiler Bobcat (Ramón)
+      </div>
+      <div class="nav-item" onclick="mostrarSeccion('materiales')">
+        <span class="icon">📦</span> Control de Materiales
+      </div>
+
+      <div class="nav-category">Automatización WhatsApp</div>
+      <div class="nav-item" onclick="mostrarSeccion('agenda')">
+        <span class="icon">📅</span> Agenda del Ingeniero
+      </div>
+      <div class="nav-item" onclick="mostrarSeccion('feed-whatsapp')">
+        <span class="icon">💬</span> Registro WhatsApp en Vivo
+      </div>
     </div>
-  </header>
 
-  <div class="main-grid">
+    <div class="sidebar-footer">
+      <div class="db-status">
+        <div class="status-dot"></div>
+        <div>
+          <strong style="color: #fff; font-size: 12px;">Neon PostgreSQL</strong><br>
+          <span style="font-size: 10.5px; color: #94a3b8;">Sincronizado con n8n</span>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-    <!-- CELULAR WHATSAPP: ASISTENTE MULTIPROPÓSITO -->
-    <div class="phone-container">
-      <div class="phone-screen">
-        <div class="wa-bar">
-          <div class="wa-avatar">📐</div>
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+    
+    <!-- TOPBAR -->
+    <header>
+      <div class="header-title">
+        <h2 id="vistaTitulo">Panel Ejecutivo de Obras y Maquinaria</h2>
+        <p id="vistaSubtitulo">Monitoreo en tiempo real de obras, liquidación semanal y despacho en Alto Paraná</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="recargarDatos()">
+          🔄 Actualizar
+        </button>
+        <button class="btn btn-primary" onclick="enviarAgendaIngenieroWA()">
+          📲 Enviar Mi Agenda a WhatsApp
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. VISTA: PANEL EJECUTIVO / RESUMEN -->
+    <section id="vista-resumen" class="view-container active">
+      <div class="metrics-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏗️</div>
+          <div class="stat-label">Obras en Ejecución</div>
+          <div class="stat-number" id="kpiObras">3</div>
+          <div class="stat-sub">Km 8, Km 10 y Hernandarias</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👷</div>
+          <div class="stat-label">Obreros en Planilla</div>
+          <div class="stat-number" id="kpiPersonales">7</div>
+          <div class="stat-sub">Albañiles, armadores, capataces</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💵</div>
+          <div class="stat-label">Vales Descontables (Semana)</div>
+          <div class="stat-number gold" id="kpiVales">650.000 Gs.</div>
+          <div class="stat-sub">Descuento automático para el sábado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚜</div>
+          <div class="stat-label">Facturado Bobcat (Mes)</div>
+          <div class="stat-number green" id="kpiBobcat">4.375.000 Gs.</div>
+          <div class="stat-sub">Tarifa 250.000 Gs/h + 250.000 flete</div>
+        </div>
+      </div>
+
+      <!-- Resumen Rápido de Obras y Bobcat -->
+      <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px;">
+        <div class="panel-box">
+          <div class="panel-header">
+            <div>
+              <h3>🏗️ Estado de Obras Activas</h3>
+              <p>Porcentaje de avance y etapas reportadas por los capataces</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModal('modalObra')">+ Nueva Obra</button>
+          </div>
+          <div id="listaObrasResumen" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+
+        <div class="panel-box">
+          <div class="panel-header">
+            <div>
+              <h3>🚜 Próximos Despachos Bobcat</h3>
+              <p>Agenda del operador Ramón</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModal('modalBobcat')">+ Agendar</button>
+          </div>
+          <div id="listaBobcatResumen" style="padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. VISTA: MIS OBRAS -->
+    <section id="vista-obras" class="view-container">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 18px; color: #fff;">Obras en Ciudad del Este y Alto Paraná</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Administra frentes de trabajo, avances y asignación de personales</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModal('modalObra')">+ Nueva Obra</button>
+      </div>
+
+      <div class="obras-grid" id="gridObrasCompleta">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </section>
+
+    <!-- 3. VISTA: PERSONALES & PLANILLA DEL SÁBADO -->
+    <section id="vista-personales" class="view-container">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 18px; color: #fff;">Planilla de Asistencias y Liquidación del Sábado</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Cálculo automático: (Jornal diario × Días trabajados) − Vales adelantados por WhatsApp</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="abrirModal('modalPersonal')">+ Nuevo Obrero</button>
+          <button class="btn btn-primary" onclick="abrirModal('modalVale')">💵 Cargar Vale Manual</button>
+        </div>
+      </div>
+
+      <div class="panel-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Personal</th>
+              <th>Cargo</th>
+              <th>Obra Asignada</th>
+              <th>Jornal Diario</th>
+              <th>Días Trab.</th>
+              <th>Vales Descontables</th>
+              <th>Neto a Pagar Sábado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPersonales">
+            <!-- Cargado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. VISTA: ALQUILER BOBCAT & OPERADOR RAMÓN -->
+    <section id="vista-bobcat" class="view-container">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 18px; color: #fff;">Control de Maquinaria y Despacho de Bobcat</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Tarifa: 250.000 Gs./hora • Traslado CDE/Minga/Hernandarias: 250.000 Gs. • Operador: Ramón</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModal('modalBobcat')">+ Nueva Reserva</button>
+      </div>
+
+      <div class="panel-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Zona de Trabajo</th>
+              <th>Fecha y Hora</th>
+              <th>Horas Pactadas</th>
+              <th>Horómetro Ramón</th>
+              <th>Total Liquidación</th>
+              <th>Estado</th>
+              <th>Acciones Rápidas</th>
+            </tr>
+          </thead>
+          <tbody id="tablaBobcat">
+            <!-- Cargado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. VISTA: MATERIALES -->
+    <section id="vista-materiales" class="view-container">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 18px; color: #fff;">Recepción de Materiales y Cargas en Obra</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Monitoreo de remisiones de cemento, varillas, arena y fletes de cantera</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModal('modalMaterial')">+ Registrar Carga</button>
+      </div>
+
+      <div class="panel-box">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha Entrega</th>
+              <th>Material</th>
+              <th>Cantidad</th>
+              <th>Proveedor</th>
+              <th>Obra Destino</th>
+              <th>Responsable de Recepción</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaMateriales">
+            <!-- Cargado dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. VISTA: AGENDA DEL INGENIERO -->
+    <section id="vista-agenda" class="view-container">
+      <div class="panel-box" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
           <div>
-            <h4 style="font-size: 13.5px; color: #e9edef;">Asistente de Obras CDE</h4>
-            <p style="font-size: 11px; color: #8696a0;">Voz, Lista, Entregas y Maquinaria</p>
+            <h3 style="font-size: 20px; color: #fff;">📋 Hoja de Ruta del Ingeniero (Hoy y Próximos Días)</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Resumen consolidado generado para envío directo a tu WhatsApp</p>
           </div>
+          <button class="btn btn-primary" onclick="enviarAgendaIngenieroWA()">
+            📲 Mandar este Resumen a mi WhatsApp
+          </button>
         </div>
 
-        <div class="chat-box" id="chat">
-          <div class="bubble b-client">
-            <div class="b-author">Ingeniero (Nota de Voz)</div>
-            🎙️ <em>"Anotá la lista de hoy en Obra Dúplex Km 10: Vinieron Juan, Marcos y Pedro. Silvio faltó. A Pedro dale 150 mil de vale para el sábado."</em>
-            <div class="b-time">07:45</div>
-          </div>
-          <div class="bubble b-bot">
-            <div class="b-author">🤖 Bot Asistente</div>
-            ¡Anotado Ing.! Registrado en <strong>Obra Dúplex Km 10</strong>:<br>
-            • ✅ <strong>Presentes (3):</strong> Juan, Marcos, Pedro<br>
-            • ❌ <strong>Ausente (1):</strong> Silvio<br>
-            • 💵 <strong>Vale descontable:</strong> 150.000 Gs. anotado a Pedro para la liquidación del sábado.<br><br>
-            Planilla de jornales actualizada automáticamente.
-            <div class="b-time">07:45</div>
-          </div>
+        <div id="agendaDetalle" style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; line-height: 1.6;">
+          <!-- Cargado dinámicamente -->
         </div>
+      </div>
+    </section>
 
-        <!-- ESCENARIOS RÁPIDOS PARA MOSTRAR -->
-        <div class="scenario-bar">
-          <button class="sc-btn" onclick="lanzarSimulacion('asistencia')">👷 Llamar Lista y Vales</button>
-          <button class="sc-btn" onclick="lanzarSimulacion('material')">🚚 Cemento Hernandarias</button>
-          <button class="sc-btn" onclick="lanzarSimulacion('avance')">📸 Avance Hormigonado</button>
-          <button class="sc-btn" onclick="lanzarSimulacion('bobcat')">🚜 Alquiler Bobcat 4h</button>
+    <!-- 7. VISTA: REGISTRO WHATSAPP EN VIVO -->
+    <section id="vista-feed-whatsapp" class="view-container">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 18px; color: #fff;">📡 Monitor de Sincronización WhatsApp / n8n</h3>
+          <p style="font-size: 12px; color: var(--text-muted);">Registro de audios y mensajes procesados automáticamente e insertados en Neon PostgreSQL</p>
         </div>
+        <button class="btn btn-secondary btn-sm" onclick="probarSimulacionEntrante()">
+          ⚡ Probar Entrada Simulada de WhatsApp
+        </button>
+      </div>
 
-        <div class="input-row">
-          <input type="text" id="waInput" class="text-input" placeholder="Manda un audio o escribe una nota..." onkeypress="if(event.key==='Enter')enviarManual()">
-          <button class="send-icon" onclick="enviarManual()">➤</button>
+      <div class="panel-box" id="listaFeedWhatsApp">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALES INTERACTIVOS ==================== -->
+
+  <!-- MODAL 1: NUEVA OBRA -->
+  <div class="modal-backdrop" id="modalObra">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>🏗️ Dar de Alta Nueva Obra</h4>
+        <button class="close-btn" onclick="cerrarModal('modalObra')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nombre del Proyecto</label>
+          <input type="text" id="obraNombre" class="form-input" placeholder="ej. Residencia San José">
         </div>
+        <div class="form-group">
+          <label class="form-label">Ubicación (CDE / Alto Paraná)</label>
+          <input type="text" id="obraUbicacion" class="form-input" placeholder="ej. Km 11 Acaray, CDE">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Etapa Inicial</label>
+          <input type="text" id="obraEtapa" class="form-input" placeholder="ej. Cimientos y movimiento de suelo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Porcentaje de Avance Inicial (%)</label>
+          <input type="number" id="obraAvance" class="form-input" value="10" min="0" max="100">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalObra')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarObra()">Guardar Obra en Neon</button>
       </div>
     </div>
+  </div>
 
-    <!-- PANEL DERECHO DINÁMICO SEGÚN PESTAÑA -->
-    <div class="dashboard">
-
-      <!-- PESTAÑA 1: MIS OBRAS EN CDE -->
-      <div id="view-obras" class="view-content active">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-lbl">🏗️ Obras Activas</div>
-            <div class="stat-val">3</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">👷 Personales en Obra Hoy</div>
-            <div class="stat-val" id="totalPersonalesHoy">14 operarios</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">📦 Entregas Esta Semana</div>
-            <div class="stat-val">6 cargas</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">🚜 Bobcat Disponible</div>
-            <div class="stat-val" style="color: #4ade80;">Lista (CDE)</div>
-          </div>
+  <!-- MODAL 2: CARGAR VALE MANUAL -->
+  <div class="modal-backdrop" id="modalVale">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>💵 Registrar Vale de Adelanto</h4>
+        <button class="close-btn" onclick="cerrarModal('modalVale')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Seleccionar Personal</label>
+          <select id="valePersonalId" class="form-select"></select>
         </div>
-
-        <h3 style="font-size: 15px; margin-top: 8px;">Estado y Avance de Obras en Alto Paraná</h3>
-        
-        <div class="obras-grid">
-          <div class="obra-card">
-            <div class="obra-title">
-              <span>Edificio Residencial Km 8</span>
-              <span class="badge-status b-obra">En curso</span>
-            </div>
-            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Km 8 Acaray, CDE</p>
-            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Losa 2do Piso</strong></div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 65%;"></div></div>
-            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
-              <span>Avance: 65%</span>
-              <span>6 Personales</span>
-            </div>
-          </div>
-
-          <div class="obra-card">
-            <div class="obra-title">
-              <span>Dúplex Modernos Km 10</span>
-              <span class="badge-status b-obra">En curso</span>
-            </div>
-            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Km 10 Monday, CDE</p>
-            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Mampostería y revoque</strong></div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 40%;"></div></div>
-            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
-              <span>Avance: 40%</span>
-              <span>4 Personales</span>
-            </div>
-          </div>
-
-          <div class="obra-card">
-            <div class="obra-title">
-              <span>Galpón Industrial Hernandarias</span>
-              <span class="badge-status b-obra">En curso</span>
-            </div>
-            <p style="font-size: 12px; color: #94a3b8;">Ubicación: Hernandarias (Zona Industrial)</p>
-            <div style="font-size: 12px; color: #cbd5e1; margin-top: 6px;">Etapa: <strong>Movimiento de suelo con Bobcat</strong></div>
-            <div class="progress-bar"><div class="progress-fill" style="width: 25%;"></div></div>
-            <div style="font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 4px;">
-              <span>Avance: 25%</span>
-              <span>4 Personales</span>
-            </div>
-          </div>
+        <div class="form-group">
+          <label class="form-label">Monto del Vale (en Guaraníes)</label>
+          <input type="number" id="valeMonto" class="form-input" placeholder="ej. 150000" step="10000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Motivo u Observación</label>
+          <input type="text" id="valeObservacion" class="form-input" placeholder="ej. Pedido por WhatsApp para gastos">
         </div>
       </div>
-
-      <!-- PESTAÑA 2: ASISTENCIA Y JORNALES (PAGO DEL SÁBADO) -->
-      <div id="view-personales" class="view-content">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-lbl">💵 Vales Adelantados (Esta semana)</div>
-            <div class="stat-val warn" id="totalVales">550.000 Gs.</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">📅 Día de Pago de Jornales</div>
-            <div class="stat-val" style="font-size: 18px; color: #f59e0b;">Sábado 13:00 hs</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">👷 Total Obreros en Lista</div>
-            <div class="stat-val">12 obreros</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">📊 Asistencia Promedio</div>
-            <div class="stat-val money">92%</div>
-          </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="font-size: 15px;">Planilla de Asistencia Semanal y Liquidación de Vales</h3>
-          <span style="font-size: 12px; color: #94a3b8;">Se actualiza sola cuando mandas audio por WhatsApp</span>
-        </div>
-
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Obrero</th>
-                <th>Obra Asignada</th>
-                <th>Cargo</th>
-                <th>Estado Hoy</th>
-                <th>Días Trabajados</th>
-                <th>Vales Solicitados</th>
-                <th>A Cobrar el Sábado</th>
-              </tr>
-            </thead>
-            <tbody id="tablaPersonales">
-              <tr>
-                <td><strong>Pedro Benítez</strong></td>
-                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
-                <td>Oficial Albañil</td>
-                <td><span class="badge-status b-presente">Presente</span></td>
-                <td>5 días</td>
-                <td style="color: #f59e0b; font-weight: 700;">150.000 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">850.000 Gs.</td>
-              </tr>
-              <tr>
-                <td><strong>Juan Almirón</strong></td>
-                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
-                <td>Ayudante</td>
-                <td><span class="badge-status b-presente">Presente</span></td>
-                <td>5 días</td>
-                <td>0 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">600.000 Gs.</td>
-              </tr>
-              <tr>
-                <td><strong>Marcos Vera</strong></td>
-                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
-                <td>Oficial Armador</td>
-                <td><span class="badge-status b-presente">Presente</span></td>
-                <td>5 días</td>
-                <td style="color: #f59e0b; font-weight: 700;">100.000 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">900.000 Gs.</td>
-              </tr>
-              <tr>
-                <td><strong>Silvio Duarte</strong></td>
-                <td><span class="badge-status b-obra">Dúplex Km 10</span></td>
-                <td>Ayudante</td>
-                <td><span class="badge-status b-falta">Faltó Hoy</span></td>
-                <td>4 días</td>
-                <td>0 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">480.000 Gs.</td>
-              </tr>
-              <tr>
-                <td><strong>Carlos Cabrera</strong></td>
-                <td><span class="badge-status b-obra">Edificio Km 8</span></td>
-                <td>Capataz General</td>
-                <td><span class="badge-status b-presente">Presente</span></td>
-                <td>5 días</td>
-                <td style="color: #f59e0b; font-weight: 700;">300.000 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">1.200.000 Gs.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalVale')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarVale()">Registrar y Descontar en Planilla</button>
       </div>
-
-      <!-- PESTAÑA 3: MATERIALES Y ENTREGAS -->
-      <div id="view-materiales" class="view-content">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-lbl">🚚 Entregas Programadas</div>
-            <div class="stat-val">3 pendientes</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">📦 Bolsas de Cemento en Obra</div>
-            <div class="stat-val">350 bolsas</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">🏗️ Varillas de Hierro</div>
-            <div class="stat-val">4.500 kg</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">⚠️ Proveedores por Confirmar</div>
-            <div class="stat-val warn">1</div>
-          </div>
-        </div>
-
-        <h3 style="font-size: 15px;">Registro de Recepción y Remisiones de Materiales</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha/Hora</th>
-                <th>Material</th>
-                <th>Proveedor</th>
-                <th>Obra Destino</th>
-                <th>Responsable de Recepción</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="tablaMateriales">
-              <tr>
-                <td>Mañana 08:00 hs</td>
-                <td><strong>200 bolsas Cemento Yguazú</strong></td>
-                <td>Distribuidora Alto Paraná</td>
-                <td>Hernandarias (Galpón)</td>
-                <td>Capataz Ramón</td>
-                <td><span class="badge-status b-vale">Programado</span></td>
-              </tr>
-              <tr>
-                <td>Jueves 14:00 hs</td>
-                <td><strong>Camión de Arena Lavada (12 m³)</strong></td>
-                <td>Cantera San Miguel</td>
-                <td>Dúplex Km 10</td>
-                <td>Oficial Pedro</td>
-                <td><span class="badge-status b-vale">Programado</span></td>
-              </tr>
-              <tr>
-                <td>Hoy 09:30 hs</td>
-                <td><strong>Varillas 10mm y 12mm (2.000 kg)</strong></td>
-                <td>Aceros CDE</td>
-                <td>Edificio Km 8</td>
-                <td>Ingeniero</td>
-                <td><span class="badge-status b-presente">✓ Recibido en Obra</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- PESTAÑA 4: ALQUILER BOBCAT -->
-      <div id="view-bobcat" class="view-content">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-lbl">🚜 Tarifa CDE</div>
-            <div class="stat-val">250.000 Gs./h</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">🚛 Traslado Flete</div>
-            <div class="stat-val">250.000 Gs.</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">💰 Facturación Bobcat Este Mes</div>
-            <div class="stat-val money">12.500.000 Gs.</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-lbl">👷 Operador Ramón</div>
-            <div class="stat-val" style="color: #38bdf8;">En servicio</div>
-          </div>
-        </div>
-
-        <h3 style="font-size: 15px;">Agenda de la Bobcat & Registro de Horas del Operador</h3>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente / Obra</th>
-                <th>Lugar</th>
-                <th>Horas Pactadas</th>
-                <th>Horas Reales Ramón</th>
-                <th>Traslado</th>
-                <th>Total Facturado</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Arq. Walter Benítez</strong></td>
-                <td>Hernandarias (Las Mercedes)</td>
-                <td>4 horas</td>
-                <td><strong>5.0 hs reales</strong></td>
-                <td>250.000 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">1.500.000 Gs.</td>
-                <td><span class="badge-status b-presente">✓ Cobrado</span></td>
-              </tr>
-              <tr>
-                <td><strong>Don Gustavo Rojas</strong></td>
-                <td>CDE (Km 8 Acaray)</td>
-                <td>4 horas</td>
-                <td><strong>5.5 hs reales</strong></td>
-                <td>250.000 Gs.</td>
-                <td style="color: #4ade80; font-weight: 700;">1.625.000 Gs.</td>
-                <td><span class="badge-status b-presente">✓ Cobrado</span></td>
-              </tr>
-              <tr>
-                <td><strong>Don Celso (Minga)</strong></td>
-                <td>Minga Guazú (Km 16)</td>
-                <td>4 horas</td>
-                <td><em>Pendiente</em></td>
-                <td>250.000 Gs.</td>
-                <td style="color: #f59e0b; font-weight: 700;">1.250.000 Gs. (Est.)</td>
-                <td><span class="badge-status b-vale">Agendado Mañana</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
     </div>
+  </div>
 
+  <!-- MODAL 3: NUEVO PERSONAL -->
+  <div class="modal-backdrop" id="modalPersonal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>👷 Registrar Nuevo Operario</h4>
+        <button class="close-btn" onclick="cerrarModal('modalPersonal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nombre y Apellido</label>
+          <input type="text" id="personalNombre" class="form-input" placeholder="ej. Andrés Duarte">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cargo / Especialidad</label>
+          <select id="personalCargo" class="form-select">
+            <option value="Oficial Albañil">Oficial Albañil</option>
+            <option value="Oficial Armador">Oficial Armador</option>
+            <option value="Ayudante">Ayudante</option>
+            <option value="Capataz General">Capataz General</option>
+            <option value="Pintor">Pintor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Obra Asignada</label>
+          <select id="personalObraId" class="form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jornal Diario (Gs./día)</label>
+          <input type="number" id="personalJornal" class="form-input" value="150000" step="10000">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalPersonal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarPersonal()">Guardar Operario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: NUEVA RESERVA BOBCAT -->
+  <div class="modal-backdrop" id="modalBobcat">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>🚜 Agendar Servicio de Bobcat</h4>
+        <button class="close-btn" onclick="cerrarModal('modalBobcat')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nombre del Cliente / Empresa</label>
+          <input type="text" id="bobcatCliente" class="form-input" placeholder="ej. Ing. Fernando Gómez">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono Cliente (WhatsApp)</label>
+          <input type="text" id="bobcatTelefono" class="form-input" placeholder="ej. 0983-123-456">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Zona de Destino</label>
+          <input type="text" id="bobcatZona" class="form-input" placeholder="ej. Km 14 Monday, Minga Guazú">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha del Servicio</label>
+          <input type="datetime-local" id="bobcatFecha" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horas Estimadas de Trabajo</label>
+          <input type="number" id="bobcatHoras" class="form-input" value="4" min="1" max="15">
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 10px; border-radius: 8px; font-size: 11.5px; color: #fbbf24;">
+          Tarifa fija: 250.000 Gs./h + 250.000 Gs. traslado. Total preliminar: <strong>1.250.000 Gs.</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalBobcat')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarBobcat()">Agendar y Asignar a Ramón</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: CERRAR HORAS DE RAMÓN -->
+  <div class="modal-backdrop" id="modalCerrarBobcat">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>⏱️ Cierre de Servicio Bobcat (Horas de Ramón)</h4>
+        <button class="close-btn" onclick="cerrarModal('modalCerrarBobcat')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cerrarServicioId">
+        <div id="cerrarClienteInfo" style="font-size: 13px; color: #38bdf8; font-weight: 700; margin-bottom: 6px;"></div>
+        <div class="form-group">
+          <label class="form-label">Horas Reales de Horómetro Reportadas por Ramón</label>
+          <input type="number" id="cerrarHorasReales" class="form-input" step="0.5" placeholder="ej. 5.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas del Operador / Observaciones</label>
+          <input type="text" id="cerrarNotas" class="form-input" placeholder="ej. Terreno nivelado, cobrado en efectivo por Ramón">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalCerrarBobcat')">Cancelar</button>
+        <button class="btn btn-success" onclick="guardarCierreBobcat()">Confirmar y Liquidar Servicio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: REGISTRAR MATERIAL -->
+  <div class="modal-backdrop" id="modalMaterial">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>📦 Registrar Entrega de Material</h4>
+        <button class="close-btn" onclick="cerrarModal('modalMaterial')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Material</label>
+          <input type="text" id="matNombre" class="form-input" placeholder="ej. 150 bolsas Cemento Yguazú">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input type="text" id="matCantidad" class="form-input" placeholder="ej. 150 bolsas / 12 m³">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proveedor</label>
+          <input type="text" id="matProveedor" class="form-input" placeholder="ej. Distribuidora CDE">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Obra Destino</label>
+          <select id="matObraId" class="form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsable de Recepción en Obra</label>
+          <input type="text" id="matResponsable" class="form-input" placeholder="ej. Capataz Ramón / Oficial Pedro">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalMaterial')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarMaterial()">Agendar Entrega</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    function cambiarPestana(vista) {
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+    let DATOS_ACTUALES = null;
+
+    // Cambiar de vista en el Sidebar
+    function mostrarSeccion(seccion) {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
 
       event.currentTarget.classList.add('active');
-      document.getElementById('view-' + vista).classList.add('active');
+      const target = document.getElementById('vista-' + seccion);
+      if (target) target.classList.add('active');
+
+      const titulos = {
+        'resumen': ['Panel Ejecutivo de Obras y Maquinaria', 'Monitoreo en tiempo real de obras, liquidación semanal y despacho en Alto Paraná'],
+        'obras': ['Gestión de Obras en Alto Paraná', 'Control de porcentaje de avance, etapas constructivas y ubicaciones'],
+        'personales': ['Planilla de Asistencias y Jornales', 'Liquidación semanal del sábado con deducción automática de vales'],
+        'bobcat': ['Despacho de Maquinaria Bobcat', 'Tarifas por hora, traslado, horómetro de Ramón y facturación'],
+        'materiales': ['Recepción y Remisiones de Materiales', 'Entregas programadas de cantera, aceros y cementeras'],
+        'agenda': ['Agenda Diaria del Ingeniero', 'Resumen consolidado listo para enviar a WhatsApp'],
+        'feed-whatsapp': ['Monitor de Sincronización WhatsApp / n8n', 'Audios y mensajes procesados por la IA en tiempo real']
+      };
+
+      if (titulos[seccion]) {
+        document.getElementById('vistaTitulo').innerText = titulos[seccion][0];
+        document.getElementById('vistaSubtitulo').innerText = titulos[seccion][1];
+      }
     }
 
-    function agregarMsg(txt, tipo, autor) {
-      const chat = document.getElementById('chat');
-      const div = document.createElement('div');
-      div.className = `bubble ${tipo === 'bot' ? 'b-bot' : 'b-client'}`;
-      div.innerHTML = `
-        <div class="b-author">${autor}</div>
-        ${txt.replace(/\n/g, '<br>')}
-        <div class="b-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-      `;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+    function abrirModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function cerrarModal(id) {
+      document.getElementById(id).classList.remove('active');
     }
 
-    const simulaciones = {
-      asistencia: {
-        in: '🎙️ [Audio WhatsApp]: "Anotá la lista de hoy en Obra Hernandarias: Vinieron Carlos, Wilson y Marcelo. Mario faltó. A Wilson dale 100.000 de vale."',
-        out: '¡Anotado Ing.! Lista de <strong>Obra Hernandarias</strong>:\n• ✅ Presentes (3): Carlos, Wilson, Marcelo\n• ❌ Ausente (1): Mario\n• 💵 Vale registrado: 100.000 Gs. a Wilson para el sábado.\n\nPlanilla actualizada.',
-        accion: () => {
-          cambiarPestanaManual('personales');
-          document.getElementById('totalVales').innerText = '650.000 Gs.';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><strong>Wilson Silva</strong></td>
-            <td><span class="badge-status b-obra">Hernandarias</span></td>
-            <td>Oficial Albañil</td>
-            <td><span class="badge-status b-presente">Presente</span></td>
-            <td>5 días</td>
-            <td style="color: #f59e0b; font-weight: 700;">100.000 Gs.</td>
-            <td style="color: #4ade80; font-weight: 700;">750.000 Gs.</td>
+    // CARGAR DATOS DESDE NEON POSTGRESQL
+    async function recargarDatos() {
+      try {
+        const res = await fetch('/api/resumen');
+        if (!res.ok) throw new Error('Error al consultar /api/resumen');
+        const data = await res.json();
+        DATOS_ACTUALES = data;
+        renderizarTodo(data);
+      } catch (err) {
+        console.error('Error cargando datos de Neon:', err);
+      }
+    }
+
+    function renderizarTodo(data) {
+      const { obras, personales, materiales, bobcat, actividad, kpis } = data;
+
+      // 1. KPIs
+      if (kpis) {
+        document.getElementById('kpiObras').innerText = kpis.total_obras || obras.length;
+        document.getElementById('kpiPersonales').innerText = kpis.total_personales || personales.length;
+        document.getElementById('kpiVales').innerText = Number(kpis.total_vales_semana || 0).toLocaleString('es-PY') + ' Gs.';
+        document.getElementById('kpiBobcat').innerText = Number(kpis.total_facturado_bobcat || 0).toLocaleString('es-PY') + ' Gs.';
+      }
+
+      // 2. Selects de Obras en Modales
+      const optObras = obras.map(o => `<option value="${o.id}">${o.nombre} (${o.ubicacion})</option>`).join('');
+      const optPersonales = personales.map(p => `<option value="${p.id}">${p.nombre} - ${p.cargo} (${p.obra || 'Sin Obra'})</option>`).join('');
+
+      const selObraPers = document.getElementById('personalObraId');
+      if (selObraPers) selObraPers.innerHTML = optObras;
+      const selObraMat = document.getElementById('matObraId');
+      if (selObraMat) selObraMat.innerHTML = optObras;
+      const selValPers = document.getElementById('valePersonalId');
+      if (selValPers) selValPers.innerHTML = optPersonales;
+
+      // 3. Obras en el Panel Resumen
+      const resObrasDiv = document.getElementById('listaObrasResumen');
+      if (resObrasDiv) {
+        resObrasDiv.innerHTML = obras.map(o => `
+          <div style="background: #0f172a; padding: 12px 14px; border-radius: 9px; border: 1px solid #1e293b;">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; color: #fff;">
+              <span>${o.nombre}</span>
+              <span style="color: #f59e0b;">${o.porcentaje_avance}%</span>
+            </div>
+            <div style="font-size: 11.5px; color: #94a3b8; margin-top: 3px;">📍 ${o.ubicacion} • Etapa: <strong style="color: #e2e8f0;">${o.etapa_actual}</strong></div>
+            <div class="progress-track"><div class="progress-fill" style="width: ${o.porcentaje_avance}%;"></div></div>
+          </div>
+        `).join('');
+      }
+
+      // 4. Grid Completo de Obras
+      const gridObrasDiv = document.getElementById('gridObrasCompleta');
+      if (gridObrasDiv) {
+        gridObrasDiv.innerHTML = obras.map(o => `
+          <div class="obra-item-card">
+            <div class="obra-top">
+              <div>
+                <div class="obra-name">${o.nombre}</div>
+                <div class="obra-loc">📍 ${o.ubicacion}</div>
+              </div>
+              <span class="badge badge-warning">${o.estado || 'En curso'}</span>
+            </div>
+            <div style="font-size: 13px; color: #cbd5e1; background: #0b111e; padding: 10px; border-radius: 8px;">
+              Etapa constructiva: <strong style="color: #fff;">${o.etapa_actual}</strong>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">
+                <span>Avance de Obra</span>
+                <span style="color: #f59e0b;">${o.porcentaje_avance}%</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill" style="width: ${o.porcentaje_avance}%;"></div></div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 5. Bobcat en el Panel Resumen
+      const resBobDiv = document.getElementById('listaBobcatResumen');
+      if (resBobDiv) {
+        resBobDiv.innerHTML = bobcat.slice(0, 4).map(b => `
+          <div style="background: #0f172a; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 12.5px;">${b.cliente}</div>
+              <div style="font-size: 11px; color: #94a3b8;">📍 ${b.zona_destino} • ${b.horas_reales > 0 ? b.horas_reales + ' hs reales' : b.horas_pactadas + ' hs est.'}</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-weight: 800; color: #4ade80; font-family: var(--font-mono); font-size: 12px;">${Number(b.total_facturado).toLocaleString('es-PY')} Gs.</span><br>
+              <span class="badge ${b.estado === 'finalizado_cobrado' ? 'badge-success' : 'badge-warning'}" style="font-size: 9.5px;">${b.estado === 'finalizado_cobrado' ? 'Cobrado' : 'Agendado'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 6. Tabla de Personales & Vales
+      const tbodyPers = document.getElementById('tablaPersonales');
+      if (tbodyPers) {
+        tbodyPers.innerHTML = personales.map(p => {
+          const dias = 5; // Días promedio semana
+          const totalJornales = Number(p.jornal_diario) * dias;
+          const vales = Number(p.total_vales || 0);
+          const neto = totalJornales - vales;
+          return `
+            <tr>
+              <td><strong style="color: #fff; font-size: 13px;">${p.nombre}</strong></td>
+              <td><span class="badge badge-info">${p.cargo}</span></td>
+              <td>${p.obra || 'Sin asignar'}</td>
+              <td style="font-family: var(--font-mono);">${Number(p.jornal_diario).toLocaleString('es-PY')} Gs.</td>
+              <td>${dias} días</td>
+              <td style="color: #f59e0b; font-weight: 700; font-family: var(--font-mono);">${vales > 0 ? vales.toLocaleString('es-PY') + ' Gs.' : '0 Gs.'}</td>
+              <td style="color: #4ade80; font-weight: 800; font-size: 13.5px; font-family: var(--font-mono);">${neto.toLocaleString('es-PY')} Gs.</td>
+              <td>
+                <button class="btn btn-secondary btn-sm" onclick="abrirModalValeDirecto(${p.id})">
+                  + Vale
+                </button>
+              </td>
+            </tr>
           `;
-          document.getElementById('tablaPersonales').prepend(tr);
-        }
-      },
-      material: {
-        in: 'Proveedor de Cemento: "Ingeniero, mañana a las 08:30 te llevamos las 150 bolsas de cemento a la obra de Km 8. Confirmame quién recibe."',
-        out: '¡Confirmado con el proveedor! Agendada entrega de 150 bolsas para mañana a las 08:30 en Obra Km 8.\n\nTarea pendiente generada: Designar encargado de recibir remisión.',
-        accion: () => {
-          cambiarPestanaManual('materiales');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>Mañana 08:30 hs</td>
-            <td><strong>150 bolsas Cemento</strong></td>
-            <td>Distribuidora CDE</td>
-            <td>Edificio Km 8</td>
-            <td>Por designar</td>
-            <td><span class="badge-status b-vale">Pendiente Responsable</span></td>
+        }).join('');
+      }
+
+      // 7. Tabla Bobcat
+      const tbodyBob = document.getElementById('tablaBobcat');
+      if (tbodyBob) {
+        tbodyBob.innerHTML = bobcat.map(b => {
+          const esCobrado = b.estado === 'finalizado_cobrado';
+          return `
+            <tr>
+              <td><strong style="color: #fff;">${b.cliente}</strong></td>
+              <td style="color: #38bdf8; font-family: var(--font-mono);">${b.telefono_cliente || 'S/N'}</td>
+              <td>📍 ${b.zona_destino}</td>
+              <td>${new Date(b.fecha_servicio).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} hs</td>
+              <td>${b.horas_pactadas} hs</td>
+              <td><strong style="color: ${b.horas_reales > 0 ? '#4ade80' : '#94a3b8'};">${b.horas_reales > 0 ? b.horas_reales + ' hs' : 'Pendiente'}</strong></td>
+              <td style="color: #4ade80; font-weight: 800; font-family: var(--font-mono); font-size: 13px;">${Number(b.total_facturado).toLocaleString('es-PY')} Gs.</td>
+              <td>
+                <span class="badge ${esCobrado ? 'badge-success' : 'badge-warning'}">
+                  ${esCobrado ? '✓ Cobrado' : 'Agendado'}
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn btn-primary btn-sm" onclick="enviarOrdenRamonWA(${b.id})" title="Enviar orden de servicio a Ramón">
+                    📲 A Ramón
+                  </button>
+                  ${!esCobrado ? `
+                    <button class="btn btn-success btn-sm" onclick="abrirModalCerrarBobcat(${b.id}, '${b.cliente}', ${b.horas_pactadas})">
+                      ⏱️ Horómetro
+                    </button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
           `;
-          document.getElementById('tablaMateriales').prepend(tr);
-        }
-      },
-      avance: {
-        in: 'Capataz Obra Km 8: "Patrón, terminamos de hormigonar la losa del segundo piso. Mañana dejamos curar y el lunes empezamos mampostería."',
-        out: '¡Excelente noticia! Registrado en bitácora de obra: <strong>Losa 2do Piso Hormigonada</strong> en Edificio Km 8.\nAvance de obra actualizado al 75%.',
-        accion: () => {
-          cambiarPestanaManual('obras');
-        }
-      },
-      bobcat: {
-        in: 'Cliente CDE: "Buenas, queremos alquilar la Bobcat para mañana 4 horas en Km 12 Monday."',
-        out: '¡Buenas! Agenda verificada: Bobcat libre mañana a la tarde en Km 12.\n• 4 horas: 1.000.000 Gs.\n• Traslado: 250.000 Gs.\n• Total: 1.250.000 Gs.\nAgendado con el operador Ramón.',
-        accion: () => {
-          cambiarPestanaManual('bobcat');
+        }).join('');
+      }
+
+      // 8. Tabla Materiales
+      const tbodyMat = document.getElementById('tablaMateriales');
+      if (tbodyMat) {
+        tbodyMat.innerHTML = materiales.map(m => {
+          const esRecibido = m.estado === 'recibido';
+          return `
+            <tr>
+              <td>${new Date(m.fecha_entrega).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} hs</td>
+              <td><strong style="color: #fff;">${m.material}</strong></td>
+              <td style="color: #f59e0b; font-weight: 700;">${m.cantidad}</td>
+              <td>${m.proveedor || 'Proveedor CDE'}</td>
+              <td><span class="badge badge-info">${m.obra || 'Obra'}</span></td>
+              <td>${m.responsable_recepcion || 'Encargado'}</td>
+              <td>
+                <span class="badge ${esRecibido ? 'badge-success' : 'badge-warning'}">
+                  ${esRecibido ? '✓ Recibido en Obra' : 'En camino / Programado'}
+                </span>
+              </td>
+              <td>
+                ${!esRecibido ? `
+                  <button class="btn btn-success btn-sm" onclick="marcarMaterialRecibido(${m.id})">
+                    ✓ Confirmar Recepción
+                  </button>
+                ` : `<span style="color: #64748b; font-size: 11px;">Remisión N° ${m.remision_nro || 'OK'}</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // 9. Monitor WhatsApp en Vivo
+      const feedDiv = document.getElementById('listaFeedWhatsApp');
+      if (feedDiv) {
+        if (!actividad || actividad.length === 0) {
+          feedDiv.innerHTML = '<div style="padding: 20px; color: #94a3b8; text-align: center;">No hay mensajes registrados aún en Neon.</div>';
+        } else {
+          feedDiv.innerHTML = actividad.map(a => `
+            <div class="feed-item">
+              <div class="feed-badge">💬</div>
+              <div class="feed-body">
+                <div class="feed-header">
+                  <span class="feed-author">${a.remitente}</span>
+                  <span class="feed-time">${new Date(a.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="feed-orig">"${a.mensaje_original}"</div>
+                <div class="feed-action">⚡ Acción Neon: ${a.resumen_accion}</div>
+              </div>
+            </div>
+          `).join('');
         }
       }
-    };
 
-    function lanzarSimulacion(key) {
-      const sim = simulaciones[key];
-      agregarMsg(sim.in, 'client', 'Audio / Mensaje WhatsApp');
-      setTimeout(() => {
-        agregarMsg(sim.out, 'bot', '🤖 Bot Asistente CDE');
-        if (sim.accion) sim.accion();
-      }, 600);
+      // 10. Hoja de Ruta de Agenda del Ingeniero
+      const agendaDiv = document.getElementById('agendaDetalle');
+      if (agendaDiv) {
+        agendaDiv.innerHTML = `
+          <div style="background: #090e1a; padding: 16px; border-radius: 10px; border-left: 4px solid #f59e0b;">
+            <h4 style="color: #f59e0b; margin-bottom: 8px;">🏗️ Frente de Obras Hoy:</h4>
+            ${obras.map(o => `• <strong>${o.nombre}</strong> (${o.ubicacion}): ${o.etapa_actual} (Avance: ${o.porcentaje_avance}%)`).join('<br>')}
+          </div>
+
+          <div style="background: #090e1a; padding: 16px; border-radius: 10px; border-left: 4px solid #38bdf8;">
+            <h4 style="color: #38bdf8; margin-bottom: 8px;">🚜 Servicios de Bobcat Programados (Operador Ramón):</h4>
+            ${bobcat.filter(b => b.estado === 'agendado').map(b => `• <strong>${b.cliente}</strong> en ${b.zona_destino} (${b.horas_pactadas} hs). Tel: ${b.telefono_cliente}`).join('<br>') || '• No hay servicios pendientes para hoy.'}
+          </div>
+
+          <div style="background: #090e1a; padding: 16px; border-radius: 10px; border-left: 4px solid #10b981;">
+            <h4 style="color: #10b981; margin-bottom: 8px;">📦 Llegada de Cargas y Materiales:</h4>
+            ${materiales.filter(m => m.estado !== 'recibido').map(m => `• <strong>${m.cantidad} ${m.material}</strong> en ${m.obra} (Recibe: ${m.responsable_recepcion})`).join('<br>') || '• Todos los materiales de hoy ya fueron recibidos.'}
+          </div>
+
+          <div style="background: #090e1a; padding: 16px; border-radius: 10px; border-left: 4px solid #a855f7;">
+            <h4 style="color: #c084fc; margin-bottom: 8px;">💵 Compromiso Financiero para el Sábado (Jornales):</h4>
+            • Total personales activos: <strong>${personales.length} operarios</strong><br>
+            • Vales acumulados a descontar: <strong style="color: #f59e0b;">${Number(kpis.total_vales_semana || 0).toLocaleString('es-PY')} Gs.</strong>
+          </div>
+        `;
+      }
     }
 
-    function cambiarPestanaManual(vista) {
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+    // ACCIONES CRUD A NEON VIA /api/acciones
 
-      const tabs = Array.from(document.querySelectorAll('.nav-tab'));
-      const targetTab = tabs.find(t => t.innerText.toLowerCase().includes(vista));
-      if (targetTab) targetTab.classList.add('active');
-      document.getElementById('view-' + vista).classList.add('active');
+    async function guardarObra() {
+      const nombre = document.getElementById('obraNombre').value.trim();
+      const ubicacion = document.getElementById('obraUbicacion').value.trim();
+      const etapa_actual = document.getElementById('obraEtapa').value.trim();
+      const porcentaje_avance = Number(document.getElementById('obraAvance').value);
+
+      if (!nombre || !ubicacion) return alert('Por favor complete nombre y ubicación');
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'crear_obra',
+          data: { nombre, ubicacion, etapa_actual, porcentaje_avance }
+        })
+      });
+
+      cerrarModal('modalObra');
+      recargarDatos();
     }
 
-    function enviarManual() {
-      const input = document.getElementById('waInput');
-      const val = input.value.trim();
-      if (!val) return;
-      agregarMsg(val, 'client', 'Ingeniero');
-      input.value = '';
-      setTimeout(() => {
-        agregarMsg("¡Mensaje recibido! Procesando intención (Obras / Asistencia / Materiales / Bobcat)...", 'bot', '🤖 Bot Asistente');
-      }, 500);
+    function abrirModalValeDirecto(personalId) {
+      document.getElementById('valePersonalId').value = personalId;
+      abrirModal('modalVale');
     }
+
+    async function guardarVale() {
+      const personal_id = document.getElementById('valePersonalId').value;
+      const vale = Number(document.getElementById('valeMonto').value);
+      const observacion = document.getElementById('valeObservacion').value.trim();
+
+      if (!vale || vale <= 0) return alert('Ingrese un monto válido de vale en Guaraníes');
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'registrar_vale',
+          data: { personal_id, vale, observacion }
+        })
+      });
+
+      cerrarModal('modalVale');
+      document.getElementById('valeMonto').value = '';
+      recargarDatos();
+    }
+
+    async function guardarPersonal() {
+      const nombre = document.getElementById('personalNombre').value.trim();
+      const cargo = document.getElementById('personalCargo').value;
+      const obra_id = document.getElementById('personalObraId').value;
+      const jornal_diario = Number(document.getElementById('personalJornal').value);
+
+      if (!nombre) return alert('Ingrese el nombre del operario');
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'crear_personal',
+          data: { nombre, cargo, obra_id, jornal_diario }
+        })
+      });
+
+      cerrarModal('modalPersonal');
+      recargarDatos();
+    }
+
+    async function guardarBobcat() {
+      const cliente = document.getElementById('bobcatCliente').value.trim();
+      const telefono = document.getElementById('bobcatTelefono').value.trim();
+      const zona = document.getElementById('bobcatZona').value.trim();
+      const fecha = document.getElementById('bobcatFecha').value;
+      const horas = Number(document.getElementById('bobcatHoras').value);
+
+      if (!cliente || !zona) return alert('Ingrese cliente y zona');
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'crear_bobcat',
+          data: { cliente, telefono, zona, fecha, horas }
+        })
+      });
+
+      cerrarModal('modalBobcat');
+      recargarDatos();
+    }
+
+    function abrirModalCerrarBobcat(id, cliente, pactadas) {
+      document.getElementById('cerrarServicioId').value = id;
+      document.getElementById('cerrarClienteInfo').innerText = `Cliente: ${cliente} (Pactado inicial: ${pactadas} hs)`;
+      document.getElementById('cerrarHorasReales').value = pactadas;
+      abrirModal('modalCerrarBobcat');
+    }
+
+    async function guardarCierreBobcat() {
+      const servicio_id = document.getElementById('cerrarServicioId').value;
+      const horas_reales = document.getElementById('cerrarHorasReales').value;
+      const notas = document.getElementById('cerrarNotas').value;
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'cerrar_bobcat_ramon',
+          data: { servicio_id, horas_reales, notas }
+        })
+      });
+
+      cerrarModal('modalCerrarBobcat');
+      recargarDatos();
+    }
+
+    async function guardarMaterial() {
+      const material = document.getElementById('matNombre').value.trim();
+      const cantidad = document.getElementById('matCantidad').value.trim();
+      const proveedor = document.getElementById('matProveedor').value.trim();
+      const obra_id = document.getElementById('matObraId').value;
+      const responsable_recepcion = document.getElementById('matResponsable').value.trim();
+
+      if (!material || !cantidad) return alert('Complete material y cantidad');
+
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'registrar_material',
+          data: { material, cantidad, proveedor, obra_id, responsable_recepcion }
+        })
+      });
+
+      cerrarModal('modalMaterial');
+      recargarDatos();
+    }
+
+    async function marcarMaterialRecibido(id) {
+      const remision = prompt('Ingrese el Número de Remisión del Proveedor (o presione Aceptar):', 'REM-' + Math.floor(1000 + Math.random()*9000));
+      await fetch('/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'marcar_material_recibido',
+          data: { material_id: id, remision_nro: remision || 'S/N' }
+        })
+      });
+      recargarDatos();
+    }
+
+    // ACCIONES WHATSAPP DIRECTAS (ENLACES GENERADOS)
+
+    function enviarOrdenRamonWA(bobcatId) {
+      if (!DATOS_ACTUALES || !DATOS_ACTUALES.bobcat) return;
+      const b = DATOS_ACTUALES.bobcat.find(x => x.id === bobcatId);
+      if (!b) return;
+
+      const texto = `*🚜 ORDEN DE SERVICIO BOBCAT - CDE*\n` +
+        `Hola Ramón, tienes un servicio agendado:\n` +
+        `👤 *Cliente:* ${b.cliente}\n` +
+        `📞 *Teléfono:* ${b.telefono_cliente || 'Coordinar con Ing.'}\n` +
+        `📍 *Destino:* ${b.zona_destino}\n` +
+        `⏱️ *Horas pactadas:* ${b.horas_pactadas} horas\n` +
+        `🚚 *Flete traslado:* 250.000 Gs.\n` +
+        `💵 *Tarifa:* 250.000 Gs./h\n\n` +
+        `_Favor enviar foto del horómetro al iniciar y al finalizar la jornada._`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank');
+    }
+
+    function enviarAgendaIngenieroWA() {
+      if (!DATOS_ACTUALES) return;
+      const { obras, bobcat, materiales, kpis } = DATOS_ACTUALES;
+
+      let msg = `*📋 AGENDA DEL DÍA - ING. CIVIL CDE*\n\n` +
+        `*🏗️ OBRAS ACTIVAS (${obras.length}):*\n`;
+      obras.forEach(o => {
+        msg += `• ${o.nombre}: ${o.etapa_actual} (${o.porcentaje_avance}%)\n`;
+      });
+
+      msg += `\n*🚜 BOBCAT (RAMÓN):*\n`;
+      const pendBob = bobcat.filter(b => b.estado === 'agendado');
+      if (pendBob.length) {
+        pendBob.forEach(b => {
+          msg += `• ${b.cliente} en ${b.zona_destino} (${b.horas_pactadas} hs)\n`;
+        });
+      } else {
+        msg += `• Sin servicios pendientes hoy.\n`;
+      }
+
+      msg += `\n*📦 MATERIALES POR RECIBIR:*\n`;
+      const pendMat = materiales.filter(m => m.estado !== 'recibido');
+      if (pendMat.length) {
+        pendMat.forEach(m => {
+          msg += `• ${m.cantidad} ${m.material} (${m.obra})\n`;
+        });
+      } else {
+        msg += `• Al día, sin cargas pendientes.\n`;
+      }
+
+      msg += `\n*💵 LIQUIDACIÓN SÁBADO:* Vales acumulados ${Number(kpis.total_vales_semana || 0).toLocaleString('es-PY')} Gs.`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    }
+
+    async function probarSimulacionEntrante() {
+      const ejemplos = [
+        {
+          tipo: 'vale_asistencia',
+          remitente: 'Capataz Wilson (Audio WhatsApp Hernandarias)',
+          mensaje_original: 'Anota 100 mil de vale a Marcelo Ríos para el sábado',
+          data: { personal_id: 7, obra_id: 3, estado: 'presente', vale: 100000, observacion: 'Audio WhatsApp del Capataz' }
+        },
+        {
+          tipo: 'reserva_bobcat',
+          remitente: 'Cliente WhatsApp (Pte. Franco)',
+          mensaje_original: 'Hola quiero la Bobcat para mañana 4 horas en Presidente Franco',
+          data: { cliente: 'Constructora Franco SRL', telefono: '0983-777-111', zona: 'Presidente Franco (Área 5)', horas: 4 }
+        }
+      ];
+
+      const sim = ejemplos[Math.floor(Math.random() * ejemplos.length)];
+
+      await fetch('/api/webhook-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sim)
+      });
+
+      recargarDatos();
+      alert('¡Mensaje entrante de WhatsApp procesado y sincronizado en Neon!');
+    }
+
+    // Auto-refresco en segundo plano cada 8 segundos para sincronización en tiempo real
+    setInterval(recargarDatos, 8000);
+
+    // Carga inicial
+    recargarDatos();
   </script>
 </body>
 </html>
