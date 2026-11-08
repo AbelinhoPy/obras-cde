@@ -31,6 +31,23 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
+  // API para consultar estado y QR desde el frontend del sistema web
+  if (req.url === '/api/estado-qr' || req.url === '/api/estado') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Content-Type', 'application/json');
+    if (req.method === 'OPTIONS') return res.end();
+    return res.end(JSON.stringify({
+      estado: estadoConexion,
+      qrDataURL: qrCodeDataURL,
+      usuario: usuarioConectado ? {
+        id: (usuarioConectado.id || '').split(':')[0],
+        name: usuarioConectado.name || 'WhatsApp Business'
+      } : null,
+      historial: historialEventos
+    }));
+  }
+
   // API interna para simular mensaje desde la web
   if (req.url.startsWith('/api/simular') && req.method === 'POST') {
     let body = '';
