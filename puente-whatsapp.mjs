@@ -323,7 +323,9 @@ server.listen(3000, () => {
 
 // 4. Procesamiento Inteligente de Mensajes hacia Neon
 async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
-  const texto = (textoOriginal || '').toLowerCase();
+  // Normalizar a minúsculas y sin tildes para máxima precisión
+  const textoRaw = (textoOriginal || '').toLowerCase();
+  const texto = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   let resultado = null;
 
   console.log(`\n📩 Mensaje recibido de ${remitenteNombre} (${remitenteId}): "${textoOriginal}"`);
@@ -483,12 +485,12 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
   // ==========================================
   // CASO 5: Bitácora de Campo (Clima, Fotos, Ferretería, Incidencias)
   // ==========================================
-  else if (texto.includes('lluvia') || texto.includes('llovió') || texto.includes('llueve') || texto.includes('paró') || texto.includes('compró') || texto.includes('compro') || texto.includes('ferreteria') || texto.includes('ferretería') || texto.includes('foto') || texto.includes('fotos') || texto.includes('retraso') || texto.includes('incidencia') || texto.includes('nota') || texto.includes('bitacora')) {
+  else if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('compr') || texto.includes('ferret') || texto.includes('foto') || texto.includes('retras') || texto.includes('inciden') || texto.includes('nota') || texto.includes('bitacor') || texto.includes('posterg')) {
     let categoria = 'general';
     let monto = 0;
-    if (texto.includes('lluvia') || texto.includes('llovió') || texto.includes('llueve') || texto.includes('paró') || texto.includes('clima')) {
+    if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('clima') || texto.includes('posterg')) {
       categoria = 'clima';
-    } else if (texto.includes('compró') || texto.includes('compro') || texto.includes('ferreteria') || texto.includes('ferretería')) {
+    } else if (texto.includes('compr') || texto.includes('ferret')) {
       categoria = 'compra_imprevista';
       const matchMil = texto.match(/(\d+)\s*(?:mil|k)/i);
       const matchGs = texto.match(/(\d[\d\.\,]*)/);
