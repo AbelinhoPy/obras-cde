@@ -373,12 +373,19 @@
       <button class="nav-btn" onclick="verTab('agenda')">Agenda del Ingeniero</button>
     </div>
 
-    <div class="sidebar-footer">
-      <div class="status-indicator">
-        <div class="dot"></div>
-        <span>Neon Postgres Conectado</span>
+    <div class="sidebar-footer" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div class="status-indicator">
+          <div class="dot"></div>
+          <span>Neon Conectado</span>
+        </div>
+        <button class="btn btn-outline btn-xs" onclick="cargarTodo()" title="Recargar">↻</button>
       </div>
-      <button class="btn btn-outline btn-xs" onclick="cargarTodo()" title="Recargar">↻</button>
+      <div style="width: 100%; padding-top: 6px; border-top: 1px solid #1e2433;">
+        <a href="http://localhost:3000" target="_blank" style="color: #10b981; font-size: 11px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+          <span>📲 Vincular WhatsApp (QR) ↗</span>
+        </a>
+      </div>
     </div>
   </aside>
 
