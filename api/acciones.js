@@ -227,6 +227,36 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, mensaje: 'Registro de material eliminado' });
     }
 
+    // ==========================================
+    // 6. MÓDULO BITÁCORA DE OBRAS (NOTAS DE CAMPO)
+    // ==========================================
+    if (accion === 'crear_bitacora') {
+      const { obra_id, categoria, nota, autor, foto_url, monto_imprevisto } = data;
+      await sql`
+        INSERT INTO bitacora_obras (obra_id, categoria, nota, autor, foto_url, monto_imprevisto)
+        VALUES (${obra_id || null}, ${categoria || 'general'}, ${nota}, ${autor || 'Ingeniero'}, ${foto_url || null}, ${monto_imprevisto || 0})
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Nota registrada en la bitácora de obra' });
+    }
+
+    if (accion === 'editar_bitacora') {
+      const { id, obra_id, categoria, nota, autor, foto_url, monto_imprevisto } = data;
+      await sql`
+        UPDATE bitacora_obras
+        SET obra_id = ${obra_id || null}, categoria = ${categoria || 'general'},
+            nota = ${nota}, autor = ${autor || 'Ingeniero'}, foto_url = ${foto_url || null},
+            monto_imprevisto = ${monto_imprevisto || 0}
+        WHERE id = ${id}
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Nota de bitácora actualizada' });
+    }
+
+    if (accion === 'eliminar_bitacora') {
+      const { id } = data;
+      await sql`DELETE FROM bitacora_obras WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Nota de bitácora eliminada' });
+    }
+
     return res.status(400).json({ error: 'Acción no reconocida' });
   } catch (error) {
     console.error('Error ejecutando acción:', error);

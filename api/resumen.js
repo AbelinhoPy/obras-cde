@@ -72,7 +72,20 @@ export default async function handler(req, res) {
       ORDER BY fecha_servicio DESC;
     `;
 
-    // 6. Registro de Actividad
+    // 6. Bitácora de Obras (Cuaderno de campo del Ingeniero)
+    let bitacora = [];
+    try {
+      bitacora = await sql`
+        SELECT b.*, o.nombre as obra_nombre
+        FROM bitacora_obras b
+        LEFT JOIN obras o ON b.obra_id = o.id
+        ORDER BY b.fecha DESC;
+      `;
+    } catch (e) {
+      console.warn('Tabla bitacora:', e.message);
+    }
+
+    // 7. Registro de Actividad
     let actividad = [];
     try {
       actividad = await sql`SELECT * FROM actividad_whatsapp ORDER BY fecha DESC LIMIT 20;`;
@@ -80,7 +93,7 @@ export default async function handler(req, res) {
       console.warn('Tabla actividad:', e.message);
     }
 
-    // 7. Balance y Contabilidad Detallada
+    // 8. Balance y Contabilidad Detallada
     let totalValesSemana = 0;
     let totalJornalesEstimados = 0;
     personales.forEach(p => {
@@ -111,6 +124,7 @@ export default async function handler(req, res) {
       vales_detalle,
       materiales,
       bobcat,
+      bitacora,
       actividad,
       contabilidad: {
         total_ingresos: totalIngresos,

@@ -93,6 +93,23 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, mensaje: 'Material agendado desde WhatsApp en Neon' });
     }
 
+    if (tipo === 'nota_bitacora') {
+      await sql`
+        INSERT INTO bitacora_obras (obra_id, categoria, nota, autor, foto_url, monto_imprevisto)
+        VALUES (${data.obra_id || null}, ${data.categoria || 'general'}, ${data.nota}, ${remitente || data.autor || 'Ingeniero (WhatsApp)'}, ${data.foto_url || null}, ${data.monto_imprevisto || 0})
+      `;
+      await sql`
+        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+        VALUES (
+          ${remitente || 'WhatsApp (Bitácora)'},
+          'nota_bitacora',
+          ${mensaje_original || data.nota},
+          ${`Nota en bitácora para obra #${data.obra_id || 'General'}: ${data.categoria || 'general'}`}
+        )
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Nota agregada a la bitácora desde WhatsApp' });
+    }
+
     return res.status(400).json({ error: 'Tipo de operación no reconocido' });
   } catch (error) {
     console.error('Error insertando en Neon:', error);

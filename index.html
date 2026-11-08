@@ -265,6 +265,9 @@
     .badge-green { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
     .badge-amber { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
     .badge-blue { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+    .badge-purple { background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.12); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.25); }
+    .badge-red { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
 
     /* PROGRESS BAR */
     .prog-bg { width: 100%; height: 5px; background: #1e2433; border-radius: 3px; overflow: hidden; margin-top: 4px; }
@@ -363,6 +366,7 @@
       <button class="nav-btn" onclick="verTab('vales')">Vales & Anticipos</button>
       <button class="nav-btn" onclick="verTab('bobcat')">Despacho Bobcat</button>
       <button class="nav-btn" onclick="verTab('materiales')">Materiales & Cargas</button>
+      <button class="nav-btn" onclick="verTab('bitacora')">Bitácora de Campo</button>
 
       <div class="nav-label">Administración</div>
       <button class="nav-btn" onclick="verTab('contabilidad')">Contabilidad & Balance</button>
@@ -612,7 +616,68 @@
       </div>
     </section>
 
-    <!-- 7. VISTA CONTABILIDAD & BALANCE -->
+    <!-- 7. VISTA BITÁCORA DE OBRAS -->
+    <section id="tab-bitacora" class="view-content">
+      <div class="table-card" style="margin-bottom: 16px;">
+        <div class="table-top" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3>Bitácora Diaria & Cuaderno de Campo</h3>
+            <p>Registro de incidencias, clima/lluvias, compras urgentes de ferretería, fotos y eventos del día</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select id="filtroBitacoraObra" class="form-ctrl" style="width: auto; min-width: 180px;" onchange="filtrarBitacora()">
+              <option value="todas">Todas las Obras</option>
+            </select>
+            <select id="filtroBitacoraCat" class="form-ctrl" style="width: auto; min-width: 160px;" onchange="filtrarBitacora()">
+              <option value="todas">Todas las Categorías</option>
+              <option value="clima">🌧️ Clima / Lluvia</option>
+              <option value="compra_imprevista">🛒 Ferretería / Compra</option>
+              <option value="foto_pendiente">📸 Foto Pendiente / Control</option>
+              <option value="incidencia">⚠️ Incidencia / Retraso</option>
+              <option value="general">📝 General / Día a Día</option>
+            </select>
+            <button class="btn btn-primary" onclick="abrirModalCrearBitacora()">+ Nueva Nota en Bitácora</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 0 16px 16px 16px;">
+          <div style="background: #090a0f; border: 1px solid #232938; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Total Registros</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;" id="kpiBitTotal">0</div>
+          </div>
+          <div style="background: #090a0f; border: 1px solid #232938; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Eventos de Clima / Lluvias</div>
+            <div style="font-size: 18px; font-weight: 700; color: #38bdf8;" id="kpiBitClima">0</div>
+          </div>
+          <div style="background: #090a0f; border: 1px solid #232938; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Ferretería & Gastos Imprevistos</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fbbf24; font-family: var(--mono);" id="kpiBitCompras">0 Gs.</div>
+          </div>
+          <div style="background: #090a0f; border: 1px solid #232938; padding: 12px; border-radius: 6px;">
+            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Fotos & Controles</div>
+            <div style="font-size: 18px; font-weight: 700; color: #c084fc;" id="kpiBitFotos">0</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px;">ID</th>
+              <th style="width: 130px;">Fecha y Hora</th>
+              <th>Obra</th>
+              <th>Tipo</th>
+              <th>Detalle de lo Ocurrido</th>
+              <th>Monto Imprevisto</th>
+              <th>Responsable</th>
+              <th style="width: 120px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbBitacora"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8. VISTA CONTABILIDAD & BALANCE -->
     <section id="tab-contabilidad" class="view-content">
       <div class="grid-stats">
         <div class="stat-box">
@@ -911,6 +976,53 @@
     </div>
   </div>
 
+  <!-- MODAL BITÁCORA (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="modalBitacora">
+    <div class="modal" style="max-width: 550px;">
+      <div class="modal-head">
+        <h4 id="modalBitacoraTitulo">Nota en Bitácora de Obra</h4>
+        <button class="btn-close" onclick="cerrarModal('modalBitacora')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bitacoraId">
+        <div class="form-row">
+          <label>Obra</label>
+          <select id="bitacoraObraId" class="form-ctrl"></select>
+        </div>
+        <div class="form-row">
+          <label>Categoría del Registro</label>
+          <select id="bitacoraCategoria" class="form-ctrl">
+            <option value="clima">🌧️ Clima / Lluvia / Parada de Obra</option>
+            <option value="compra_imprevista">🛒 Compra Imprevista / Ferretería</option>
+            <option value="foto_pendiente">📸 Control de Calidad / Foto Pendiente</option>
+            <option value="incidencia">⚠️ Incidencia / Retraso / Accidente</option>
+            <option value="general">📝 Nota del Día a Día</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Detalle de la Nota (lo que pasó en obra)</label>
+          <textarea id="bitacoraNota" class="form-ctrl" rows="3" placeholder="ej. Llovió torrencialmente a las 11:00 hs, se paró el hormigonado. / Se compraron 10 discos de amoladora. / Falta foto de armadura de viga."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Gasto Imprevisto en Guaraníes (opcional)</label>
+          <input type="number" id="bitacoraMonto" class="form-ctrl" placeholder="ej. 150000" value="0">
+        </div>
+        <div class="form-row">
+          <label>Referencia de Foto / Archivo (opcional)</label>
+          <input type="text" id="bitacoraFoto" class="form-ctrl" placeholder="ej. Foto armadura enviada al grupo WhatsApp / link Drive">
+        </div>
+        <div class="form-row">
+          <label>Autor / Quién reporta</label>
+          <input type="text" id="bitacoraAutor" class="form-ctrl" value="Ingeniero">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalBitacora')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarBitacora()">Guardar en Bitácora</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let DATA = null;
 
@@ -929,6 +1041,7 @@
         vales: ['Vales & Anticipos', 'Control detallado de anticipos a deducir en la liquidación del sábado'],
         bobcat: ['Despacho de Bobcat', 'Agenda, horómetro de Ramón y facturación'],
         materiales: ['Control de Materiales', 'Seguimiento de remisiones de cemento, arena y varillas'],
+        bitacora: ['Bitácora & Cuaderno de Campo', 'Registro de incidencias, clima/lluvias, fotos pendientes y compras de ferretería'],
         contabilidad: ['Contabilidad & Balance', 'Estado de ingresos, egresos y exportación de planillas'],
         agenda: ['Agenda del Ingeniero', 'Resumen diario consolidado para despacho y WhatsApp']
       };
@@ -994,6 +1107,16 @@
       const selObras = obras.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
       const selMatObra = document.getElementById('matObraId');
       if (selMatObra) selMatObra.innerHTML = selObras;
+
+      const selBitModal = document.getElementById('bitacoraObraId');
+      if (selBitModal) selBitModal.innerHTML = selObras;
+
+      const selBitFiltro = document.getElementById('filtroBitacoraObra');
+      if (selBitFiltro) {
+        const valActual = selBitFiltro.value;
+        selBitFiltro.innerHTML = '<option value="todas">Todas las Obras</option>' + selObras;
+        if (valActual) selBitFiltro.value = valActual;
+      }
 
       const selPersonales = personales.map(p => `<option value="${p.id}">${p.nombre} (${p.cargo})</option>`).join('');
       const selValPers = document.getElementById('valePersonalId');
@@ -1158,7 +1281,19 @@
       }).join('');
       document.getElementById('tbMateriales').innerHTML = rowsMat;
 
-      // 8. Contabilidad
+      // 8. Bitácora de Campo & Novedades
+      const bitacora = DATA.bitacora || [];
+      const elKpiBitTotal = document.getElementById('kpiBitTotal');
+      if (elKpiBitTotal) {
+        elKpiBitTotal.innerText = bitacora.length;
+        document.getElementById('kpiBitClima').innerText = bitacora.filter(b => b.categoria === 'clima').length;
+        const gastosBit = bitacora.reduce((acc, b) => acc + Number(b.monto_imprevisto || 0), 0);
+        document.getElementById('kpiBitCompras').innerText = gastosBit.toLocaleString('es-PY') + ' Gs.';
+        document.getElementById('kpiBitFotos').innerText = bitacora.filter(b => b.categoria === 'foto_pendiente').length;
+        renderizarTablaBitacora();
+      }
+
+      // 9. Contabilidad
       document.getElementById('contabIngresos').innerText = Number(contabilidad.total_ingresos).toLocaleString('es-PY') + ' Gs.';
       document.getElementById('contabBobcatDetalle').innerText = `Cobrado: ${Number(contabilidad.total_bobcat_cobrado).toLocaleString('es-PY')} • Pendiente: ${Number(contabilidad.total_bobcat_pendiente).toLocaleString('es-PY')}`;
       document.getElementById('contabEgresos').innerText = Number(contabilidad.total_egresos_jornales).toLocaleString('es-PY') + ' Gs.';
@@ -1172,7 +1307,7 @@
       document.getElementById('ctaMargen').innerText = Number(contabilidad.balance_neto_operativo).toLocaleString('es-PY') + ' Gs.';
       document.getElementById('ctaMargen').style.color = contabilidad.balance_neto_operativo >= 0 ? '#34d399' : '#f87171';
 
-      // 9. Agenda Diaria
+      // 10. Agenda Diaria
       document.getElementById('boxAgenda').innerHTML = `
         <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--primary); margin-bottom:12px;">
           <h4 style="color:#fff; margin-bottom:6px;">Obras en Curso (${obras.length}):</h4>
@@ -1185,6 +1320,10 @@
         <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--accent-green); margin-bottom:12px;">
           <h4 style="color:#fff; margin-bottom:6px;">Llegada de Materiales Pendientes:</h4>
           ${materiales.filter(m => m.estado !== 'recibido').map(m => `• <strong>${m.cantidad} ${m.material}</strong> en ${m.obra} (Proveedor: ${m.proveedor})`).join('<br>') || '• Todas las cargas recibidas.'}
+        </div>
+        <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid #38bdf8; margin-bottom:12px;">
+          <h4 style="color:#fff; margin-bottom:6px;">Últimas Notas de Campo & Bitácora:</h4>
+          ${bitacora.slice(0, 4).map(b => `• <strong>[${b.obra_nombre || 'General'}]</strong> <em>${b.categoria}</em>: ${b.nota} ${Number(b.monto_imprevisto) > 0 ? `(Gasto: ${Number(b.monto_imprevisto).toLocaleString('es-PY')} Gs.)` : ''}`).join('<br>') || '• Sin notas recientes en bitácora.'}
         </div>
         <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid #a855f7;">
           <h4 style="color:#fff; margin-bottom:6px;">Proyección de Pagos Sábado:</h4>
@@ -1600,6 +1739,117 @@
       document.body.removeChild(link);
     }
 
+    // ==================== MÓDULO BITÁCORA ====================
+    function renderizarTablaBitacora() {
+      if (!DATA) return;
+      const bitacora = DATA.bitacora || [];
+      const obraSel = document.getElementById('filtroBitacoraObra')?.value || 'todas';
+      const catSel = document.getElementById('filtroBitacoraCat')?.value || 'todas';
+
+      const filtradas = bitacora.filter(b => {
+        if (obraSel !== 'todas' && String(b.obra_id) !== String(obraSel)) return false;
+        if (catSel !== 'todas' && b.categoria !== catSel) return false;
+        return true;
+      });
+
+      const catBadge = {
+        clima: '<span class="badge-status badge-cyan">🌧️ Clima / Lluvia</span>',
+        compra_imprevista: '<span class="badge-status badge-amber">🛒 Ferretería / Compra</span>',
+        foto_pendiente: '<span class="badge-status badge-purple">📸 Foto Pendiente</span>',
+        incidencia: '<span class="badge-status badge-red">⚠️ Incidencia</span>',
+        general: '<span class="badge-status badge-blue">📝 General</span>'
+      };
+
+      const rows = filtradas.map(b => `
+        <tr>
+          <td>#${b.id}</td>
+          <td>${new Date(b.fecha).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+          <td><strong>${b.obra_nombre || 'General'}</strong></td>
+          <td>${catBadge[b.categoria] || catBadge.general}</td>
+          <td style="max-width:320px; line-height:1.4;">
+            ${b.nota}
+            ${b.foto_url ? `<div style="font-size:11px; color:#38bdf8; margin-top:3px;">📷 ${b.foto_url}</div>` : ''}
+          </td>
+          <td style="font-family:var(--mono); color:#fbbf24;">
+            ${Number(b.monto_imprevisto) > 0 ? Number(b.monto_imprevisto).toLocaleString('es-PY') + ' Gs.' : '-'}
+          </td>
+          <td style="color:#94a3b8; font-size:11px;">${b.autor || 'Ingeniero'}</td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="editarBitacoraModal(${b.id})">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="eliminarBitacora(${b.id})">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+
+      const tb = document.getElementById('tbBitacora');
+      if (tb) {
+        tb.innerHTML = rows || '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:20px;">Sin notas registradas para el filtro seleccionado.</td></tr>';
+      }
+    }
+
+    function filtrarBitacora() {
+      renderizarTablaBitacora();
+    }
+
+    function abrirModalCrearBitacora() {
+      document.getElementById('modalBitacoraTitulo').innerText = 'Nueva Nota en Bitácora de Obra';
+      document.getElementById('bitacoraId').value = '';
+      document.getElementById('bitacoraNota').value = '';
+      document.getElementById('bitacoraMonto').value = '0';
+      document.getElementById('bitacoraFoto').value = '';
+      document.getElementById('bitacoraAutor').value = 'Ingeniero';
+      abrirModal('modalBitacora');
+    }
+
+    function editarBitacoraModal(id) {
+      const b = (DATA.bitacora || []).find(x => x.id === id);
+      if (!b) return;
+      document.getElementById('modalBitacoraTitulo').innerText = 'Editar Nota de Bitácora #' + id;
+      document.getElementById('bitacoraId').value = b.id;
+      document.getElementById('bitacoraObraId').value = b.obra_id;
+      document.getElementById('bitacoraCategoria').value = b.categoria || 'general';
+      document.getElementById('bitacoraNota').value = b.nota;
+      document.getElementById('bitacoraMonto').value = b.monto_imprevisto || 0;
+      document.getElementById('bitacoraFoto').value = b.foto_url || '';
+      document.getElementById('bitacoraAutor').value = b.autor || 'Ingeniero';
+      abrirModal('modalBitacora');
+    }
+
+    async function guardarBitacora() {
+      const id = document.getElementById('bitacoraId').value;
+      const obra_id = Number(document.getElementById('bitacoraObraId').value);
+      const categoria = document.getElementById('bitacoraCategoria').value;
+      const nota = document.getElementById('bitacoraNota').value.trim();
+      const monto_imprevisto = Number(document.getElementById('bitacoraMonto').value || 0);
+      const foto_url = document.getElementById('bitacoraFoto').value.trim();
+      const autor = document.getElementById('bitacoraAutor').value.trim();
+
+      if (!nota) return alert('Por favor escriba la nota o incidencia de la obra.');
+
+      const accion = id ? 'editar_bitacora' : 'crear_bitacora';
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion,
+          data: { id: Number(id), obra_id, categoria, nota, monto_imprevisto, foto_url, autor }
+        })
+      });
+
+      cerrarModal('modalBitacora');
+      cargarTodo();
+    }
+
+    async function eliminarBitacora(id) {
+      if (!confirm(`¿Está seguro de eliminar la nota de bitácora #${id}?`)) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_bitacora', data: { id } })
+      });
+      cargarTodo();
+    }
+
     // ==================== DISPATCH WHATSAPP ====================
 
     function enviarOrdenRamonWA(bobcatId) {
@@ -1654,6 +1904,14 @@
       msg += `\n*FINANZAS SEMANA:*\n` +
         `• Vales acumulados a deducir: ${Number(contabilidad.total_vales_adelantados).toLocaleString('es-PY')} Gs.\n` +
         `• Efectivo neto para sábado: ${Number(contabilidad.saldo_liquido_sabado).toLocaleString('es-PY')} Gs.`;
+
+      const notasBit = (DATA.bitacora || []).slice(0, 3);
+      if (notasBit.length) {
+        msg += `\n\n*NOVEDADES DE BITÁCORA:*\n`;
+        notasBit.forEach(b => {
+          msg += `• [${b.obra_nombre || 'General'}] ${b.nota}\n`;
+        });
+      }
 
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
