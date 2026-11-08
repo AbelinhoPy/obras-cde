@@ -1252,12 +1252,12 @@
       // Checkboxes de obras en modal personal
       const checkDiv = document.getElementById('personalObrasCheckboxes');
       if (checkDiv) {
-        checkDiv.innerHTML = obras.map(o => `
+        checkDiv.innerHTML = obras.length ? obras.map(o => `
           <label class="checkbox-item">
             <input type="checkbox" name="chkObra" value="${o.id}">
             <span>${o.nombre} (${o.ubicacion})</span>
           </label>
-        `).join('');
+        `).join('') : '<div style="color:#64748b; font-size:11.5px; padding:6px;">No hay obras creadas aún. Crea una obra primero.</div>';
       }
 
       // 3. Tablas de Obras
@@ -1278,7 +1278,7 @@
           </td>
         </tr>
       `).join('');
-      document.getElementById('tbObrasResumen').innerHTML = rowsObrasRes;
+      document.getElementById('tbObrasResumen').innerHTML = rowsObrasRes || '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:22px;">No hay obras activas. Haz clic en "+ Nueva Obra" para comenzar.</td></tr>';
 
       const rowsObrasComp = obras.map(o => `
         <tr>
@@ -1298,7 +1298,7 @@
           </td>
         </tr>
       `).join('');
-      document.getElementById('tbObrasCompleta').innerHTML = rowsObrasComp;
+      document.getElementById('tbObrasCompleta').innerHTML = rowsObrasComp || '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:22px;">No hay obras registradas aún. Haz clic en "+ Nueva Obra" para crear la primera.</td></tr>';
 
       // 4. Tabla Funcionarios (Múltiples Obras)
       const rowsPers = personales.map(p => {
@@ -1327,7 +1327,7 @@
           </tr>
         `;
       }).join('');
-      document.getElementById('tbPersonales').innerHTML = rowsPers;
+      document.getElementById('tbPersonales').innerHTML = rowsPers || '<tr><td colspan="8" style="text-align:center; color:#64748b; padding:22px;">No hay funcionarios registrados. Haz clic en "+ Nuevo Funcionario" para cargar el personal.</td></tr>';
 
       // 5. Tabla Vales Detalle
       const rowsVales = (vales_detalle || []).map(v => `
@@ -1344,7 +1344,7 @@
           </td>
         </tr>
       `).join('');
-      document.getElementById('tbVales').innerHTML = rowsVales;
+      document.getElementById('tbVales').innerHTML = rowsVales || '<tr><td colspan="7" style="text-align:center; color:#64748b; padding:22px;">Sin vales ni adelantos registrados esta semana.</td></tr>';
 
       // 6. Bobcat
       const rowsBobRes = bobcat.slice(0, 4).map(b => `
@@ -1358,7 +1358,7 @@
           </td>
         </tr>
       `).join('');
-      document.getElementById('tbBobcatResumen').innerHTML = rowsBobRes;
+      document.getElementById('tbBobcatResumen').innerHTML = rowsBobRes || '<tr><td colspan="5" style="text-align:center; color:#64748b; padding:20px;">Sin servicios de Bobcat agendados.</td></tr>';
 
       const rowsBob = bobcat.map(b => `
         <tr>
@@ -1378,7 +1378,7 @@
           </td>
         </tr>
       `).join('');
-      document.getElementById('tbBobcat').innerHTML = rowsBob;
+      document.getElementById('tbBobcat').innerHTML = rowsBob || '<tr><td colspan="10" style="text-align:center; color:#64748b; padding:22px;">Sin servicios de Bobcat agendados. Haz clic en "+ Agendar Servicio".</td></tr>';
 
       // 7. Materiales
       const rowsMat = materiales.map(m => {
@@ -1406,7 +1406,7 @@
           </tr>
         `;
       }).join('');
-      document.getElementById('tbMateriales').innerHTML = rowsMat;
+      document.getElementById('tbMateriales').innerHTML = rowsMat || '<tr><td colspan="9" style="text-align:center; color:#64748b; padding:22px;">Sin entregas de materiales programadas. Haz clic en "+ Programar Carga".</td></tr>';
 
       // 8. Bitácora de Campo & Novedades
       const bitacora = DATA.bitacora || [];
@@ -1438,7 +1438,7 @@
       document.getElementById('boxAgenda').innerHTML = `
         <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--primary); margin-bottom:12px;">
           <h4 style="color:#fff; margin-bottom:6px;">Obras en Curso (${obras.length}):</h4>
-          ${obras.map(o => `• <strong>${o.nombre}</strong> (${o.ubicacion}): ${o.etapa_actual} [Avance: ${o.porcentaje_avance}%]`).join('<br>')}
+          ${obras.length ? obras.map(o => `• <strong>${o.nombre}</strong> (${o.ubicacion}): ${o.etapa_actual} [Avance: ${o.porcentaje_avance}%]`).join('<br>') : '• Sin frentes de obra activos en este momento.'}
         </div>
         <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--accent-amber); margin-bottom:12px;">
           <h4 style="color:#fff; margin-bottom:6px;">Servicios de Bobcat con Operador Ramón:</h4>
