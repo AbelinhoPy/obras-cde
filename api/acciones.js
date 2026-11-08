@@ -1,4 +1,4 @@
-// api/acciones.js - CRUD interactivo directo desde la plataforma web a Neon
+// api/acciones.js - CRUD interactivo integral (Crear, Editar, Eliminar) conectado a Neon
 import { getDb } from './db.js';
 
 export default async function handler(req, res) {
@@ -17,81 +17,126 @@ export default async function handler(req, res) {
   const { accion, data } = req.body || {};
 
   try {
-    // 1. Crear Obra
+    // ==========================================
+    // 1. MÓDULO OBRAS
+    // ==========================================
     if (accion === 'crear_obra') {
       const { nombre, ubicacion, etapa_actual, porcentaje_avance } = data;
       await sql`
         INSERT INTO obras (nombre, ubicacion, etapa_actual, porcentaje_avance, estado)
         VALUES (${nombre}, ${ubicacion}, ${etapa_actual || 'Inicio'}, ${porcentaje_avance || 0}, 'activa')
       `;
-      // Registrar log de actividad
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Sistema Web (Ingeniero)', 'crear_obra', ${`Nueva obra registrada: ${nombre}`}, ${`Obra ${nombre} dada de alta en ${ubicacion}`})
-      `;
       return res.status(200).json({ ok: true, mensaje: 'Obra creada exitosamente' });
     }
 
-    // 2. Crear Personal de Obra
-    if (accion === 'crear_personal') {
-      const { nombre, cargo, obra_id, jornal_diario, telefono } = data;
+    if (accion === 'editar_obra') {
+      const { id, nombre, ubicacion, etapa_actual, porcentaje_avance, estado } = data;
       await sql`
-        INSERT INTO personales (nombre, cargo, obra_id, jornal_diario, telefono)
-        VALUES (${nombre}, ${cargo}, ${obra_id || null}, ${jornal_diario || 150000}, ${telefono || ''})
+        UPDATE obras
+        SET nombre = ${nombre}, ubicacion = ${ubicacion}, etapa_actual = ${etapa_actual},
+            porcentaje_avance = ${porcentaje_avance}, estado = ${estado || 'activa'}
+        WHERE id = ${id}
       `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Sistema Web (Ingeniero)', 'crear_personal', ${`Alta de personal: ${nombre} (${cargo})`}, ${`Registrado con jornal de ${Number(jornal_diario || 150000).toLocaleString('es-PY')} Gs.`})
-      `;
-      return res.status(200).json({ ok: true, mensaje: 'Personal registrado con éxito' });
+      return res.status(200).json({ ok: true, mensaje: 'Obra actualizada correctamente' });
     }
 
-    // 3. Registrar Vale o Asistencia Manual
+    if (accion === 'eliminar_obra') {
+      const { id } = data;
+      await sql`DELETE FROM obras WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Obra eliminada del sistema' });
+    }
+
+    // ==========================================
+    // 2. MÓDULO PERSONALES (Con N a N Obras)
+    // ==========================================
+    if (accion === 'crear_personal') {
+      const { nombre, cargo, jornal_diario, telefono, obras_ids } = data;
+      const result = await sql`
+        INSERT INTO personales (nombre, cargo, jornal_diario, telefono, activo)
+        VALUES (${nombre}, ${cargo}, ${jornal_diario || 150000}, ${telefono || ''}, true)
+        RETURNING id;
+      `;
+      const personalId = result[0].id;
+
+      // Asignar en personal_obras
+      if (Array.isArray(obras_ids) && obras_ids.length > 0) {
+        for (const oId of obras_ids) {
+          await sql`
+            INSERT INTO personal_obras (personal_id, obra_id)
+            VALUES (${personalId}, ${oId})
+            ON CONFLICT DO NOTHING;
+          `;
+        }
+      }
+      return res.status(200).json({ ok: true, mensaje: 'Personal registrado y asignado a obras' });
+    }
+
+    if (accion === 'editar_personal') {
+      const { id, nombre, cargo, jornal_diario, telefono, activo, obras_ids } = data;
+      await sql`
+        UPDATE personales
+        SET nombre = ${nombre}, cargo = ${cargo}, jornal_diario = ${jornal_diario},
+            telefono = ${telefono || ''}, activo = ${activo !== false}
+        WHERE id = ${id}
+      `;
+
+      // Sincronizar obras asignadas
+      await sql`DELETE FROM personal_obras WHERE personal_id = ${id}`;
+      if (Array.isArray(obras_ids) && obras_ids.length > 0) {
+        for (const oId of obras_ids) {
+          await sql`
+            INSERT INTO personal_obras (personal_id, obra_id)
+            VALUES (${id}, ${oId})
+            ON CONFLICT DO NOTHING;
+          `;
+        }
+      }
+      return res.status(200).json({ ok: true, mensaje: 'Personal y asignación de obras actualizados' });
+    }
+
+    if (accion === 'eliminar_personal') {
+      const { id } = data;
+      await sql`DELETE FROM personales WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Personal eliminado' });
+    }
+
+    // ==========================================
+    // 3. MÓDULO VALES / ASISTENCIAS
+    // ==========================================
     if (accion === 'registrar_vale') {
       const { personal_id, obra_id, vale, observacion } = data;
       await sql`
         INSERT INTO asistencias_vales (personal_id, obra_id, fecha, estado, vale_adelanto, observacion)
-        VALUES (${personal_id}, ${obra_id || null}, CURRENT_DATE, 'presente', ${vale || 0}, ${observacion || 'Vale cargado desde panel web'})
+        VALUES (${personal_id}, ${obra_id || null}, CURRENT_DATE, 'presente', ${vale || 0}, ${observacion || 'Vale manual'})
       `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Sistema Web (Ingeniero)', 'asistencia_vale', ${`Vale de ${Number(vale).toLocaleString('es-PY')} Gs.`}, ${`Registrado a ID de personal #${personal_id} para liquidación del sábado`})
-      `;
-      return res.status(200).json({ ok: true, mensaje: 'Vale registrado y descontado para el sábado' });
+      return res.status(200).json({ ok: true, mensaje: 'Vale registrado en Neon' });
     }
 
-    // 4. Registrar Entrega de Material
-    if (accion === 'registrar_material') {
-      const { obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion } = data;
+    if (accion === 'editar_vale') {
+      const { id, vale_adelanto, observacion } = data;
       await sql`
-        INSERT INTO materiales (obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion, estado)
-        VALUES (${obra_id || null}, ${material}, ${cantidad}, ${proveedor}, ${fecha_entrega || new Date().toISOString()}, ${responsable_recepcion || 'Encargado'}, 'programado')
+        UPDATE asistencias_vales
+        SET vale_adelanto = ${vale_adelanto}, observacion = ${observacion || ''}
+        WHERE id = ${id}
       `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Sistema Web (Ingeniero)', 'material_recepcion', ${`Carga de ${material} (${cantidad})`}, ${`Entrega agendada con proveedor ${proveedor}`})
-      `;
-      return res.status(200).json({ ok: true, mensaje: 'Material agendado en el sistema' });
+      return res.status(200).json({ ok: true, mensaje: 'Vale modificado' });
     }
 
-    // 5. Marcar Material como Recibido en Obra
-    if (accion === 'marcar_material_recibido') {
-      const { material_id, remision_nro } = data;
-      await sql`
-        UPDATE materiales
-        SET estado = 'recibido', remision_nro = ${remision_nro || 'S/N'}
-        WHERE id = ${material_id}
-      `;
-      return res.status(200).json({ ok: true, mensaje: 'Material marcado como recibido en obra' });
+    if (accion === 'eliminar_vale') {
+      const { id } = data;
+      await sql`DELETE FROM asistencias_vales WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Vale eliminado y restituido a la liquidación' });
     }
 
-    // 6. Agendar Alquiler de Bobcat
+    // ==========================================
+    // 4. MÓDULO BOBCAT
+    // ==========================================
     if (accion === 'crear_bobcat') {
-      const { cliente, telefono, zona, fecha, horas, operador } = data;
-      const tarifaHora = 250000;
-      const costoTraslado = 250000;
+      const { cliente, telefono, zona, fecha, horas, tarifa_hora, costo_traslado, operador } = data;
+      const tarifa = Number(tarifa_hora || 250000);
+      const flete = Number(costo_traslado || 250000);
       const horasNum = Number(horas || 4);
-      const totalEstimado = (horasNum * tarifaHora) + costoTraslado;
+      const total = (horasNum * tarifa) + flete;
 
       await sql`
         INSERT INTO bobcat_servicios (
@@ -99,17 +144,30 @@ export default async function handler(req, res) {
           horas_pactadas, horas_reales, tarifa_hora, costo_traslado, total_facturado, operador, estado
         ) VALUES (
           ${cliente}, ${telefono || ''}, ${zona}, ${fecha || new Date().toISOString()},
-          ${horasNum}, 0, ${tarifaHora}, ${costoTraslado}, ${totalEstimado}, ${operador || 'Ramón'}, 'agendado'
+          ${horasNum}, 0, ${tarifa}, ${flete}, ${total}, ${operador || 'Ramón'}, 'agendado'
         )
       `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Sistema Web (Ingeniero)', 'reserva_bobcat', ${`Reserva Bobcat: ${cliente} en ${zona}`}, ${`Agendado ${horasNum} hs. Total estimado: ${totalEstimado.toLocaleString('es-PY')} Gs.`})
-      `;
-      return res.status(200).json({ ok: true, mensaje: 'Servicio de Bobcat agendado correctamente' });
+      return res.status(200).json({ ok: true, mensaje: 'Servicio Bobcat agendado' });
     }
 
-    // 7. Cerrar Horas Reales del Operador Ramón
+    if (accion === 'editar_bobcat') {
+      const { id, cliente, telefono, zona, fecha, horas_pactadas, horas_reales, tarifa_hora, costo_traslado, estado, notas } = data;
+      const horasFinales = Number(horas_reales > 0 ? horas_reales : horas_pactadas);
+      const tarifa = Number(tarifa_hora || 250000);
+      const flete = Number(costo_traslado || 250000);
+      const total = (horasFinales * tarifa) + flete;
+
+      await sql`
+        UPDATE bobcat_servicios
+        SET cliente = ${cliente}, telefono_cliente = ${telefono || ''}, zona_destino = ${zona},
+            fecha_servicio = ${fecha}, horas_pactadas = ${horas_pactadas}, horas_reales = ${horas_reales || 0},
+            tarifa_hora = ${tarifa}, costo_traslado = ${flete}, total_facturado = ${total},
+            estado = ${estado || 'agendado'}, notas_operador = ${notas || ''}
+        WHERE id = ${id}
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Servicio Bobcat actualizado' });
+    }
+
     if (accion === 'cerrar_bobcat_ramon') {
       const { servicio_id, horas_reales, notas } = data;
       const horasNum = Number(horas_reales);
@@ -117,14 +175,56 @@ export default async function handler(req, res) {
 
       await sql`
         UPDATE bobcat_servicios
-        SET horas_reales = ${horasNum}, total_facturado = ${totalFinal}, estado = 'finalizado_cobrado', notas_operador = ${notas || 'Cierre de servicio verificado'}
+        SET horas_reales = ${horasNum}, total_facturado = ${totalFinal}, estado = 'finalizado_cobrado', notas_operador = ${notas || 'Cierre verificado'}
         WHERE id = ${servicio_id}
       `;
+      return res.status(200).json({ ok: true, mensaje: 'Horómetro de Ramón liquidado exitosamente' });
+    }
+
+    if (accion === 'eliminar_bobcat') {
+      const { id } = data;
+      await sql`DELETE FROM bobcat_servicios WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Servicio de Bobcat eliminado' });
+    }
+
+    // ==========================================
+    // 5. MÓDULO MATERIALES
+    // ==========================================
+    if (accion === 'registrar_material') {
+      const { obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion } = data;
       await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES ('Operador Ramón', 'horas_ramon', ${`Horómetro reportado: ${horasNum} hs`}, ${`Servicio #${servicio_id} liquidado. Total a cobrar: ${totalFinal.toLocaleString('es-PY')} Gs.`})
+        INSERT INTO materiales (obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion, estado)
+        VALUES (${obra_id || null}, ${material}, ${cantidad}, ${proveedor}, ${fecha_entrega || new Date().toISOString()}, ${responsable_recepcion || 'Encargado'}, 'programado')
       `;
-      return res.status(200).json({ ok: true, mensaje: 'Horas y facturación final del operador actualizadas' });
+      return res.status(200).json({ ok: true, mensaje: 'Material agendado' });
+    }
+
+    if (accion === 'editar_material') {
+      const { id, obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion, estado, remision_nro } = data;
+      await sql`
+        UPDATE materiales
+        SET obra_id = ${obra_id || null}, material = ${material}, cantidad = ${cantidad},
+            proveedor = ${proveedor}, fecha_entrega = ${fecha_entrega}, responsable_recepcion = ${responsable_recepcion},
+            estado = ${estado || 'programado'}, remision_nro = ${remision_nro || ''}
+        WHERE id = ${id}
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Material actualizado' });
+    }
+
+    if (accion === 'marcar_material_recibido') {
+      const { material_id, remision_nro } = data;
+      await sql`
+        UPDATE materiales
+        SET estado = 'recibido', remision_nro = ${remision_nro || 'S/N'}
+        WHERE id = ${material_id}
+      `;
+      return res.status(200).json({ ok: true, mensaje: 'Material marcado como recibido' });
+    }
+
+    if (accion === 'eliminar_material') {
+      const { id } = data;
+      await sql`DELETE FROM materiales WHERE id = ${id}`;
+      return res.status(200).json({ ok: true, mensaje: 'Registro de material eliminado' });
     }
 
     return res.status(400).json({ error: 'Acción no reconocida' });
