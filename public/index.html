@@ -938,13 +938,15 @@
       }
     }
 
+    const API_BASE = window.location.hostname.includes('github.io') ? 'https://obras-cde.vercel.app' : '';
+
     function abrirModal(id) { document.getElementById(id).classList.add('active'); }
     function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
 
     // CARGAR TODO DESDE NEON
     async function cargarTodo() {
       try {
-        const res = await fetch('/api/resumen');
+        const res = await fetch(API_BASE + '/api/resumen');
         if (!res.ok) throw new Error('Error al consultar Neon');
         DATA = await res.json();
         renderizar();
@@ -955,7 +957,32 @@
 
     function renderizar() {
       if (!DATA) return;
-      const { obras, personales, vales_detalle, materiales, bobcat, contabilidad } = DATA;
+      const obras = DATA.obras || [];
+      const personales = DATA.personales || [];
+      const vales_detalle = DATA.vales_detalle || [];
+      const materiales = DATA.materiales || [];
+      const bobcat = DATA.bobcat || [];
+
+      // Cálculo de contabilidad defensivo si no viene precálculo del backend
+      let contabilidad = DATA.contabilidad;
+      if (!contabilidad) {
+        const totalIngresos = bobcat.reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const bobcatCobrado = bobcat.filter(b => b.estado === 'finalizado_cobrado').reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const bobcatPendiente = bobcat.filter(b => b.estado === 'agendado').reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const totalEgresosJornales = personales.reduce((acc, p) => acc + (Number(p.jornal_diario || 150000) * (Number(p.dias_computados) || 5)), 0);
+        const totalVales = personales.reduce((acc, p) => acc + Number(p.total_vales || 0), 0);
+        const saldoLiquido = Math.max(0, totalEgresosJornales - totalVales);
+        contabilidad = {
+          total_ingresos: totalIngresos,
+          total_bobcat_cobrado: bobcatCobrado,
+          total_bobcat_pendiente: bobcatPendiente,
+          total_egresos_jornales: totalEgresosJornales,
+          total_vales_adelantados: totalVales,
+          saldo_liquido_sabado: saldoLiquido,
+          balance_neto_operativo: totalIngresos - totalEgresosJornales
+        };
+        DATA.contabilidad = contabilidad;
+      }
 
       // 1. KPIs
       document.getElementById('kpiObras').innerText = obras.length;
@@ -1032,7 +1059,7 @@
 
         const obrasTags = (p.obras_asignadas && p.obras_asignadas.length)
           ? p.obras_asignadas.map(o => `<span class="tag">${o.nombre}</span>`).join(' ')
-          : '<span style="color:#64748b; font-size:11px;">Sin obra asignada</span>';
+          : (p.obra ? `<span class="tag">${p.obra}</span>` : '<span style="color:#64748b; font-size:11px;">Sin obra asignada</span>');
 
         return `
           <tr>
@@ -1205,7 +1232,7 @@
       if (!nombre || !ubicacion) return alert('Complete nombre y ubicación.');
 
       const accion = id ? 'editar_obra' : 'crear_obra';
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1220,7 +1247,7 @@
 
     async function eliminarObra(id, nombre) {
       if (!confirm(`¿Está seguro de eliminar la obra "${nombre}"? Esta acción borrará las asignaciones vinculadas.`)) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'eliminar_obra', data: { id } })
@@ -1269,7 +1296,7 @@
       if (!nombre) return alert('Ingrese el nombre del funcionario.');
 
       const accion = id ? 'editar_personal' : 'crear_personal';
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1284,7 +1311,7 @@
 
     async function eliminarPersonal(id, nombre) {
       if (!confirm(`¿Eliminar funcionario "${nombre}"? Se removerán sus vales y asignaciones.`)) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'eliminar_personal', data: { id } })
@@ -1319,7 +1346,7 @@
       if (!vale || vale <= 0) return alert('Ingrese un monto válido.');
 
       if (id) {
-        await fetch('/api/acciones', {
+        await fetch(API_BASE + '/api/acciones', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1329,7 +1356,7 @@
         });
       } else {
         const personal_id = document.getElementById('valePersonalId').value;
-        await fetch('/api/acciones', {
+        await fetch(API_BASE + '/api/acciones', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1345,7 +1372,7 @@
 
     async function eliminarVale(id) {
       if (!confirm('¿Eliminar este vale? El monto se restituirá al salario neto del funcionario.')) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'eliminar_vale', data: { id } })
@@ -1393,7 +1420,7 @@
       if (!cliente || !zona) return alert('Complete cliente y zona.');
 
       const accion = id ? 'editar_bobcat' : 'crear_bobcat';
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1418,7 +1445,7 @@
 
     async function eliminarBobcat(id, cliente) {
       if (!confirm(`¿Eliminar el servicio de Bobcat de "${cliente}"?`)) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'eliminar_bobcat', data: { id } })
@@ -1468,7 +1495,7 @@
       if (!material || !cantidad) return alert('Complete material y cantidad.');
 
       const accion = id ? 'editar_material' : 'registrar_material';
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1484,7 +1511,7 @@
     async function confirmarRecepcion(id) {
       const rem = prompt('Ingrese N° de Remisión del Proveedor:', 'REM-' + Math.floor(1000 + Math.random()*9000));
       if (rem === null) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1497,7 +1524,7 @@
 
     async function eliminarMaterial(id, mat) {
       if (!confirm(`¿Eliminar registro de material "${mat}"?`)) return;
-      await fetch('/api/acciones', {
+      await fetch(API_BASE + '/api/acciones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'eliminar_material', data: { id } })

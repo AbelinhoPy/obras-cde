@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestión de Obras, Maquinaria y Finanzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090a0f;
+      --sidebar: #0f1117;
+      --card: #131620;
+      --card-border: #1f2433;
+      --card-hover: #171b26;
+      --border: #1e2230;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent-amber: #f59e0b;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text: #f1f5f9;
+      --text-muted: #8492a6;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+    body { background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; font-size: 13px; }
+
+    /* SIDEBAR */
+    aside {
+      width: 250px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .brand {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .brand-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.2px;
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .nav-group {
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 8px 12px 4px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      width: 100%;
+    }
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: #fff;
+    }
+    .nav-btn.active {
+      background: #1e293b;
+      color: #fff;
+      font-weight: 600;
+      border-color: #334155;
+    }
+
+    .sidebar-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      background: #090b10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    /* MAIN CONTAINER */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    /* TOPBAR */
+    header {
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 17, 23, 0.8);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-info h2 { font-size: 17px; font-weight: 700; color: #fff; }
+    .header-info p { font-size: 12px; color: var(--text-muted); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 7px 13px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      outline: none;
+    }
+    .btn-default { background: #1e2433; border-color: #2b3245; color: #e2e8f0; }
+    .btn-default:hover { background: #272f42; color: #fff; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #059669; color: #fff; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: rgba(239, 68, 68, 0.12); color: #f87171; border-color: rgba(239, 68, 68, 0.25); }
+    .btn-danger:hover { background: #ef4444; color: #fff; }
+    .btn-outline { background: transparent; border-color: var(--border); color: #94a3b8; }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
+    .btn-xs { padding: 4px 8px; font-size: 11px; border-radius: 4px; }
+
+    /* VIEWS */
+    .view-content {
+      padding: 24px 28px;
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .view-content.active { display: flex; }
+
+    /* STATS GRID */
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 22px; font-weight: 700; color: #fff; font-family: var(--mono); }
+    .stat-value.green { color: #34d399; }
+    .stat-value.amber { color: #fbbf24; }
+    .stat-desc { font-size: 11px; color: #64748b; }
+
+    /* TABLES */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .table-top {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #11141d;
+    }
+    .table-top h3 { font-size: 13.5px; font-weight: 600; color: #fff; }
+    .table-top p { font-size: 11.5px; color: var(--text-muted); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th {
+      background: #0d0f17;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    tbody tr { border-bottom: 1px solid #181d2a; }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.015); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 11px 16px; color: #e2e8f0; vertical-align: middle; }
+
+    /* TAGS & BADGES */
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #1e2433;
+      color: #cbd5e1;
+      border: 1px solid #283144;
+      margin: 1px 2px;
+    }
+    .badge-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .badge-amber { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+    .badge-blue { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+
+    /* PROGRESS BAR */
+    .prog-bg { width: 100%; height: 5px; background: #1e2433; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .prog-fill { height: 100%; background: #3b82f6; border-radius: 3px; }
+
+    /* MODAL WINDOWS */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #11141d;
+      border: 1px solid #262c3d;
+      border-radius: 10px;
+      width: 500px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-head h4 { font-size: 14px; font-weight: 700; color: #fff; }
+    .btn-close { background: transparent; border: none; color: #8492a6; font-size: 16px; cursor: pointer; }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 75vh; overflow-y: auto; }
+    .form-row { display: flex; flex-direction: column; gap: 5px; }
+    .form-row label { font-size: 11.5px; font-weight: 600; color: #cbd5e1; }
+    .form-ctrl {
+      background: #090a0f;
+      border: 1px solid #232938;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      outline: none;
+    }
+    .form-ctrl:focus { border-color: var(--primary); }
+    .modal-foot {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: #0d0f17;
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: #090a0f;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #232938;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVEGACIÓN LATERAL -->
+  <aside>
+    <div class="brand">
+      <div class="brand-title">Gestión de Obras CDE</div>
+      <div class="brand-subtitle">Control & Liquidaciones</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">General</div>
+      <button class="nav-btn active" onclick="verTab('resumen')">Dashboard Resumen</button>
+      <button class="nav-btn" onclick="verTab('obras')">Frente de Obras</button>
+
+      <div class="nav-label">Operaciones & Personal</div>
+      <button class="nav-btn" onclick="verTab('personales')">Funcionarios & Asignación</button>
+      <button class="nav-btn" onclick="verTab('vales')">Vales & Anticipos</button>
+      <button class="nav-btn" onclick="verTab('bobcat')">Despacho Bobcat</button>
+      <button class="nav-btn" onclick="verTab('materiales')">Materiales & Cargas</button>
+
+      <div class="nav-label">Administración</div>
+      <button class="nav-btn" onclick="verTab('contabilidad')">Contabilidad & Balance</button>
+      <button class="nav-btn" onclick="verTab('agenda')">Agenda del Ingeniero</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <div class="dot"></div>
+        <span>Neon Postgres Conectado</span>
+      </div>
+      <button class="btn btn-outline btn-xs" onclick="cargarTodo()" title="Recargar">↻</button>
+    </div>
+  </aside>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main>
+    <header>
+      <div class="header-info">
+        <h2 id="topTitulo">Dashboard Resumen</h2>
+        <p id="topSubtitulo">Control operativo, financiero y de maquinaria de Ciudad del Este</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-default" onclick="exportarContabilidadCSV()">
+          Exportar Contabilidad (.csv)
+        </button>
+        <button class="btn btn-primary" onclick="enviarAgendaIngenieroWA()">
+          Enviar Agenda a WhatsApp
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. VISTA DASHBOARD RESUMEN -->
+    <section id="tab-resumen" class="view-content active">
+      <div class="grid-stats">
+        <div class="stat-box">
+          <div class="stat-label">Obras Activas</div>
+          <div class="stat-value" id="kpiObras">0</div>
+          <div class="stat-desc">Frentes en ejecución en Alto Paraná</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Funcionarios Registrados</div>
+          <div class="stat-value" id="kpiPersonales">0</div>
+          <div class="stat-desc">Asociados a una o varias obras</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Vales Acumulados (Semana)</div>
+          <div class="stat-value amber" id="kpiVales">0 Gs.</div>
+          <div class="stat-desc">A deducir en liquidación del sábado</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Facturación Bobcat</div>
+          <div class="stat-value green" id="kpiBobcat">0 Gs.</div>
+          <div class="stat-desc">Alquileres registrados en el período</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+        <div class="table-card">
+          <div class="table-top">
+            <div>
+              <h3>Avance de Obras</h3>
+              <p>Estado constructivo reportado</p>
+            </div>
+            <button class="btn btn-primary btn-xs" onclick="abrirModal('modalCrearObra')">Nueva Obra</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Obra</th>
+                <th>Ubicación</th>
+                <th>Etapa Actual</th>
+                <th>Avance</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbObrasResumen"></tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="table-top">
+            <div>
+              <h3>Próximos Servicios Bobcat</h3>
+              <p>Operador Ramón</p>
+            </div>
+            <button class="btn btn-primary btn-xs" onclick="abrirModal('modalCrearBobcat')">Nuevo Servicio</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Zona</th>
+                <th>Total Gs.</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbBobcatResumen"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. VISTA OBRAS -->
+    <section id="tab-obras" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Frente de Obras</h3>
+            <p>Listado completo de obras, avances y funcionarios asignados</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModal('modalCrearObra')">+ Nueva Obra</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre de la Obra</th>
+              <th>Ubicación</th>
+              <th>Etapa Constructiva</th>
+              <th>Avance (%)</th>
+              <th>Operarios Asignados</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbObrasCompleta"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. VISTA FUNCIONARIOS (CON MÚLTIPLES OBRAS ASIGNADAS) -->
+    <section id="tab-personales" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Planilla de Funcionarios & Asignación de Obras</h3>
+            <p>Asociación de operarios a una o varias obras simultáneas y cálculo de saldos</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-default" onclick="exportarPlanillaSabadoCSV()">Exportar Planilla (.csv)</button>
+            <button class="btn btn-primary" onclick="abrirModal('modalCrearPersonal')">+ Nuevo Funcionario</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre y Apellido</th>
+              <th>Cargo</th>
+              <th>Obras Asignadas</th>
+              <th>Jornal Diario</th>
+              <th>Vales Acumulados</th>
+              <th>Neto a Cobrar Sábado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbPersonales"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. VISTA VALES & ANTICIPOS -->
+    <section id="tab-vales" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Registro Individual de Vales y Adelantos</h3>
+            <p>Historial de vales entregados para liquidar el sábado</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModal('modalCrearVale')">+ Registrar Vale</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Funcionario</th>
+              <th>Obra</th>
+              <th>Monto Vale (Gs.)</th>
+              <th>Observación / Origen</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbVales"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. VISTA BOBCAT -->
+    <section id="tab-bobcat" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Servicios y Alquiler de Bobcat</h3>
+            <p>Tarifa oficial: 250.000 Gs./h + Traslado: 250.000 Gs. • Operador: Ramón</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModal('modalCrearBobcat')">+ Agendar Servicio</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Contacto</th>
+              <th>Zona de Trabajo</th>
+              <th>Fecha/Hora</th>
+              <th>Horas Pactadas</th>
+              <th>Horas Reales Ramón</th>
+              <th>Total Facturado</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbBobcat"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. VISTA MATERIALES -->
+    <section id="tab-materiales" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Control de Materiales & Remisiones</h3>
+            <p>Entregas de proveedores en cada frente de obra</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModal('modalCrearMaterial')">+ Registrar Carga</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha Entrega</th>
+              <th>Material</th>
+              <th>Cantidad</th>
+              <th>Proveedor</th>
+              <th>Obra Destino</th>
+              <th>Recepción</th>
+              <th>Estado / Remisión</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbMateriales"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7. VISTA CONTABILIDAD & BALANCE -->
+    <section id="tab-contabilidad" class="view-content">
+      <div class="grid-stats">
+        <div class="stat-box">
+          <div class="stat-label">Ingresos Totales (Bobcat)</div>
+          <div class="stat-value green" id="contabIngresos">0 Gs.</div>
+          <div class="stat-desc" id="contabBobcatDetalle">Cobrado vs Pendiente</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Egresos Proyectados (Jornales)</div>
+          <div class="stat-value" id="contabEgresos">0 Gs.</div>
+          <div class="stat-desc">5 días de jornada completa</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Vales Pagados Anticipadamente</div>
+          <div class="stat-value amber" id="contabVales">0 Gs.</div>
+          <div class="stat-desc">Deducidos del pago del sábado</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Saldo Neto a Pagar Sábado</div>
+          <div class="stat-value green" id="contabSaldoLiquido">0 Gs.</div>
+          <div class="stat-desc">Efectivo necesario para el sábado a las 13:00</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Resumen Contable Consolidado</h3>
+            <p>Estado de ingresos y egresos de la empresa en Ciudad del Este</p>
+          </div>
+          <button class="btn btn-success" onclick="exportarContabilidadCSV()">
+            Descargar Libro Contable (.csv)
+          </button>
+        </div>
+        <div style="padding: 20px; font-size: 13px; line-height: 1.8;">
+          <table style="max-width: 650px;">
+            <tbody>
+              <tr>
+                <td><strong>(+) Ingresos por Maquinaria Bobcat:</strong></td>
+                <td style="text-align: right; font-family: var(--mono); color: #34d399; font-weight: 700;" id="ctaIngresos">0 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>(-) Presupuesto de Jornales (Semanal):</strong></td>
+                <td style="text-align: right; font-family: var(--mono); color: #f87171;" id="ctaJornales">0 Gs.</td>
+              </tr>
+              <tr>
+                <td><strong>&nbsp;&nbsp;&nbsp;&nbsp;↳ Menos: Vales adelantados a descontar:</strong></td>
+                <td style="text-align: right; font-family: var(--mono); color: #fbbf24;" id="ctaVales">0 Gs.</td>
+              </tr>
+              <tr style="border-top: 1px solid var(--border); font-size: 14px;">
+                <td><strong>(=) Efectivo neto para liquidación sábado:</strong></td>
+                <td style="text-align: right; font-family: var(--mono); color: #fff; font-weight: 700;" id="ctaLiquido">0 Gs.</td>
+              </tr>
+              <tr style="border-top: 2px solid #334155; font-size: 14px;">
+                <td><strong>Margen Operativo Bruto (Bobcat vs Jornales):</strong></td>
+                <td style="text-align: right; font-family: var(--mono); font-weight: 700;" id="ctaMargen">0 Gs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. VISTA AGENDA -->
+    <section id="tab-agenda" class="view-content">
+      <div class="table-card">
+        <div class="table-top">
+          <div>
+            <h3>Hoja de Ruta Diaria del Ingeniero</h3>
+            <p>Agenda consolidada de obras, recepciones y despacho de maquinaria</p>
+          </div>
+          <button class="btn btn-primary" onclick="enviarAgendaIngenieroWA()">
+            Enviar Agenda a WhatsApp
+          </button>
+        </div>
+        <div id="boxAgenda" style="padding: 20px; font-size: 13px; line-height: 1.8; color: #cbd5e1;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== MODALES (CREAR & EDITAR) ==================== -->
+
+  <!-- MODAL OBRA (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="modalObra">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalObraTitulo">Obra</h4>
+        <button class="btn-close" onclick="cerrarModal('modalObra')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="obraId">
+        <div class="form-row">
+          <label>Nombre de la Obra</label>
+          <input type="text" id="obraNombre" class="form-ctrl" placeholder="ej. Edificio Residencial Km 8">
+        </div>
+        <div class="form-row">
+          <label>Ubicación</label>
+          <input type="text" id="obraUbicacion" class="form-ctrl" placeholder="ej. Km 8 Acaray, CDE">
+        </div>
+        <div class="form-row">
+          <label>Etapa Constructiva</label>
+          <input type="text" id="obraEtapa" class="form-ctrl" placeholder="ej. Losa 2do Piso">
+        </div>
+        <div class="form-row">
+          <label>Porcentaje de Avance (%)</label>
+          <input type="number" id="obraAvance" class="form-ctrl" min="0" max="100">
+        </div>
+        <div class="form-row">
+          <label>Estado</label>
+          <select id="obraEstado" class="form-ctrl">
+            <option value="activa">Activa / En curso</option>
+            <option value="pausada">Pausada</option>
+            <option value="finalizada">Finalizada</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalObra')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarObra()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERSONAL (CREAR / EDITAR CON CHECKBOXES MULTI-OBRA) -->
+  <div class="modal-overlay" id="modalPersonal">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalPersonalTitulo">Funcionario</h4>
+        <button class="btn-close" onclick="cerrarModal('modalPersonal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="personalId">
+        <div class="form-row">
+          <label>Nombre y Apellido</label>
+          <input type="text" id="personalNombre" class="form-ctrl" placeholder="ej. Andrés Benítez">
+        </div>
+        <div class="form-row">
+          <label>Cargo / Función</label>
+          <select id="personalCargo" class="form-ctrl">
+            <option value="Oficial Albañil">Oficial Albañil</option>
+            <option value="Oficial Armador">Oficial Armador</option>
+            <option value="Ayudante">Ayudante</option>
+            <option value="Capataz General">Capataz General</option>
+            <option value="Pintor">Pintor</option>
+            <option value="Electricista">Electricista</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Obras Asignadas (Seleccionar una o varias)</label>
+          <div class="checkbox-list" id="personalObrasCheckboxes"></div>
+        </div>
+        <div class="form-row">
+          <label>Jornal Diario (en Guaraníes)</label>
+          <input type="number" id="personalJornal" class="form-ctrl" step="10000" placeholder="150000">
+        </div>
+        <div class="form-row">
+          <label>Teléfono (WhatsApp)</label>
+          <input type="text" id="personalTelefono" class="form-ctrl" placeholder="ej. 0983-111-222">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalPersonal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarPersonal()">Guardar Funcionario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VALE (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="modalVale">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalValeTitulo">Vale de Anticipo</h4>
+        <button class="btn-close" onclick="cerrarModal('modalVale')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="valeId">
+        <div class="form-row" id="rowValePersonal">
+          <label>Funcionario</label>
+          <select id="valePersonalId" class="form-ctrl"></select>
+        </div>
+        <div class="form-row">
+          <label>Monto del Vale (Gs.)</label>
+          <input type="number" id="valeMonto" class="form-ctrl" step="10000" placeholder="150000">
+        </div>
+        <div class="form-row">
+          <label>Observación / Motivo</label>
+          <input type="text" id="valeObservacion" class="form-ctrl" placeholder="ej. Anticipo para gastos familiares">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalVale')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarVale()">Guardar Vale</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL BOBCAT (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="modalBobcat">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalBobcatTitulo">Servicio Bobcat</h4>
+        <button class="btn-close" onclick="cerrarModal('modalBobcat')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bobcatId">
+        <div class="form-row">
+          <label>Cliente</label>
+          <input type="text" id="bobcatCliente" class="form-ctrl" placeholder="ej. Arq. Walter Benítez">
+        </div>
+        <div class="form-row">
+          <label>Teléfono Cliente</label>
+          <input type="text" id="bobcatTelefono" class="form-ctrl" placeholder="ej. 0983-445-566">
+        </div>
+        <div class="form-row">
+          <label>Zona de Destino (Alto Paraná)</label>
+          <input type="text" id="bobcatZona" class="form-ctrl" placeholder="ej. Minga Guazú Km 16">
+        </div>
+        <div class="form-row">
+          <label>Fecha y Hora</label>
+          <input type="datetime-local" id="bobcatFecha" class="form-ctrl">
+        </div>
+        <div class="form-row">
+          <label>Horas Pactadas</label>
+          <input type="number" id="bobcatHorasPactadas" class="form-ctrl" value="4" min="1">
+        </div>
+        <div class="form-row">
+          <label>Horas Reales de Horómetro (Ramón)</label>
+          <input type="number" id="bobcatHorasReales" class="form-ctrl" step="0.5" value="0">
+        </div>
+        <div class="form-row">
+          <label>Estado del Servicio</label>
+          <select id="bobcatEstado" class="form-ctrl">
+            <option value="agendado">Agendado</option>
+            <option value="en_curso">En curso</option>
+            <option value="finalizado_cobrado">Finalizado y Cobrado</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalBobcat')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarBobcat()">Guardar Servicio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MATERIAL (CREAR / EDITAR) -->
+  <div class="modal-overlay" id="modalMaterial">
+    <div class="modal">
+      <div class="modal-head">
+        <h4 id="modalMaterialTitulo">Material / Carga</h4>
+        <button class="btn-close" onclick="cerrarModal('modalMaterial')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="materialId">
+        <div class="form-row">
+          <label>Material</label>
+          <input type="text" id="matNombre" class="form-ctrl" placeholder="ej. Cemento Yguazú">
+        </div>
+        <div class="form-row">
+          <label>Cantidad</label>
+          <input type="text" id="matCantidad" class="form-ctrl" placeholder="ej. 200 bolsas">
+        </div>
+        <div class="form-row">
+          <label>Proveedor</label>
+          <input type="text" id="matProveedor" class="form-ctrl" placeholder="ej. Distribuidora Alto Paraná">
+        </div>
+        <div class="form-row">
+          <label>Obra Destino</label>
+          <select id="matObraId" class="form-ctrl"></select>
+        </div>
+        <div class="form-row">
+          <label>Fecha de Entrega</label>
+          <input type="datetime-local" id="matFecha" class="form-ctrl">
+        </div>
+        <div class="form-row">
+          <label>Responsable en Obra</label>
+          <input type="text" id="matResponsable" class="form-ctrl" placeholder="ej. Capataz Ramón">
+        </div>
+        <div class="form-row">
+          <label>Estado</label>
+          <select id="matEstado" class="form-ctrl">
+            <option value="programado">Programado</option>
+            <option value="recibido">Recibido en Obra</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Número de Remisión</label>
+          <input type="text" id="matRemision" class="form-ctrl" placeholder="ej. REM-8942">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-default" onclick="cerrarModal('modalMaterial')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarMaterial()">Guardar Carga</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let DATA = null;
+
+    function verTab(nombre) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      const el = document.getElementById('tab-' + nombre);
+      if (el) el.classList.add('active');
+
+      const titulos = {
+        resumen: ['Dashboard Resumen', 'Control operativo, financiero y de maquinaria de Ciudad del Este'],
+        obras: ['Frente de Obras', 'Listado de obras activas y control de porcentaje de avance'],
+        personales: ['Funcionarios & Obras Asignadas', 'Asociación de funcionarios a múltiples obras y liquidación de jornales'],
+        vales: ['Vales & Anticipos', 'Control detallado de anticipos a deducir en la liquidación del sábado'],
+        bobcat: ['Despacho de Bobcat', 'Agenda, horómetro de Ramón y facturación'],
+        materiales: ['Control de Materiales', 'Seguimiento de remisiones de cemento, arena y varillas'],
+        contabilidad: ['Contabilidad & Balance', 'Estado de ingresos, egresos y exportación de planillas'],
+        agenda: ['Agenda del Ingeniero', 'Resumen diario consolidado para despacho y WhatsApp']
+      };
+      if (titulos[nombre]) {
+        document.getElementById('topTitulo').innerText = titulos[nombre][0];
+        document.getElementById('topSubtitulo').innerText = titulos[nombre][1];
+      }
+    }
+
+    const API_BASE = window.location.hostname.includes('github.io') ? 'https://obras-cde.vercel.app' : '';
+
+    function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+    function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // CARGAR TODO DESDE NEON
+    async function cargarTodo() {
+      try {
+        const res = await fetch(API_BASE + '/api/resumen');
+        if (!res.ok) throw new Error('Error al consultar Neon');
+        DATA = await res.json();
+        renderizar();
+      } catch (e) {
+        console.error('Error cargando datos:', e);
+      }
+    }
+
+    function renderizar() {
+      if (!DATA) return;
+      const obras = DATA.obras || [];
+      const personales = DATA.personales || [];
+      const vales_detalle = DATA.vales_detalle || [];
+      const materiales = DATA.materiales || [];
+      const bobcat = DATA.bobcat || [];
+
+      // Cálculo de contabilidad defensivo si no viene precálculo del backend
+      let contabilidad = DATA.contabilidad;
+      if (!contabilidad) {
+        const totalIngresos = bobcat.reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const bobcatCobrado = bobcat.filter(b => b.estado === 'finalizado_cobrado').reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const bobcatPendiente = bobcat.filter(b => b.estado === 'agendado').reduce((acc, b) => acc + Number(b.total_facturado || 0), 0);
+        const totalEgresosJornales = personales.reduce((acc, p) => acc + (Number(p.jornal_diario || 150000) * (Number(p.dias_computados) || 5)), 0);
+        const totalVales = personales.reduce((acc, p) => acc + Number(p.total_vales || 0), 0);
+        const saldoLiquido = Math.max(0, totalEgresosJornales - totalVales);
+        contabilidad = {
+          total_ingresos: totalIngresos,
+          total_bobcat_cobrado: bobcatCobrado,
+          total_bobcat_pendiente: bobcatPendiente,
+          total_egresos_jornales: totalEgresosJornales,
+          total_vales_adelantados: totalVales,
+          saldo_liquido_sabado: saldoLiquido,
+          balance_neto_operativo: totalIngresos - totalEgresosJornales
+        };
+        DATA.contabilidad = contabilidad;
+      }
+
+      // 1. KPIs
+      document.getElementById('kpiObras').innerText = obras.length;
+      document.getElementById('kpiPersonales').innerText = personales.length;
+      document.getElementById('kpiVales').innerText = Number(contabilidad.total_vales_adelantados || 0).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('kpiBobcat').innerText = Number(contabilidad.total_ingresos || 0).toLocaleString('es-PY') + ' Gs.';
+
+      // 2. Selects y Checkboxes de Obras
+      const selObras = obras.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+      const selMatObra = document.getElementById('matObraId');
+      if (selMatObra) selMatObra.innerHTML = selObras;
+
+      const selPersonales = personales.map(p => `<option value="${p.id}">${p.nombre} (${p.cargo})</option>`).join('');
+      const selValPers = document.getElementById('valePersonalId');
+      if (selValPers) selValPers.innerHTML = selPersonales;
+
+      // Checkboxes de obras en modal personal
+      const checkDiv = document.getElementById('personalObrasCheckboxes');
+      if (checkDiv) {
+        checkDiv.innerHTML = obras.map(o => `
+          <label class="checkbox-item">
+            <input type="checkbox" name="chkObra" value="${o.id}">
+            <span>${o.nombre} (${o.ubicacion})</span>
+          </label>
+        `).join('');
+      }
+
+      // 3. Tablas de Obras
+      const rowsObrasRes = obras.map(o => `
+        <tr>
+          <td><strong>${o.nombre}</strong></td>
+          <td>${o.ubicacion}</td>
+          <td>${o.etapa_actual}</td>
+          <td>
+            <div style="display:flex; justify-content:space-between; font-size:11px;">
+              <span>${o.porcentaje_avance}%</span>
+            </div>
+            <div class="prog-bg"><div class="prog-fill" style="width:${o.porcentaje_avance}%"></div></div>
+          </td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="editarObraModal(${o.id})">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="eliminarObra(${o.id}, '${o.nombre}')">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('tbObrasResumen').innerHTML = rowsObrasRes;
+
+      const rowsObrasComp = obras.map(o => `
+        <tr>
+          <td>#${o.id}</td>
+          <td><strong>${o.nombre}</strong></td>
+          <td>${o.ubicacion}</td>
+          <td>${o.etapa_actual}</td>
+          <td>
+            <strong>${o.porcentaje_avance}%</strong>
+            <div class="prog-bg"><div class="prog-fill" style="width:${o.porcentaje_avance}%"></div></div>
+          </td>
+          <td><span class="tag">${o.total_operarios_asignados || 0} funcionarios</span></td>
+          <td><span class="badge-status badge-blue">${o.estado || 'activa'}</span></td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="editarObraModal(${o.id})">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="eliminarObra(${o.id}, '${o.nombre}')">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('tbObrasCompleta').innerHTML = rowsObrasComp;
+
+      // 4. Tabla Funcionarios (Múltiples Obras)
+      const rowsPers = personales.map(p => {
+        const dias = 5;
+        const totalBruto = Number(p.jornal_diario || 150000) * dias;
+        const vales = Number(p.total_vales || 0);
+        const neto = totalBruto - vales;
+
+        const obrasTags = (p.obras_asignadas && p.obras_asignadas.length)
+          ? p.obras_asignadas.map(o => `<span class="tag">${o.nombre}</span>`).join(' ')
+          : (p.obra ? `<span class="tag">${p.obra}</span>` : '<span style="color:#64748b; font-size:11px;">Sin obra asignada</span>');
+
+        return `
+          <tr>
+            <td>#${p.id}</td>
+            <td><strong>${p.nombre}</strong></td>
+            <td><span class="badge-status badge-blue">${p.cargo}</span></td>
+            <td>${obrasTags}</td>
+            <td style="font-family:var(--mono);">${Number(p.jornal_diario).toLocaleString('es-PY')} Gs.</td>
+            <td style="font-family:var(--mono); color:#fbbf24;">${vales.toLocaleString('es-PY')} Gs.</td>
+            <td style="font-family:var(--mono); color:#34d399; font-weight:700;">${neto.toLocaleString('es-PY')} Gs.</td>
+            <td>
+              <button class="btn btn-default btn-xs" onclick="editarPersonalModal(${p.id})">Editar</button>
+              <button class="btn btn-danger btn-xs" onclick="eliminarPersonal(${p.id}, '${p.nombre}')">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('tbPersonales').innerHTML = rowsPers;
+
+      // 5. Tabla Vales Detalle
+      const rowsVales = (vales_detalle || []).map(v => `
+        <tr>
+          <td>#${v.id}</td>
+          <td>${new Date(v.fecha).toLocaleDateString('es-PY')}</td>
+          <td><strong>${v.personal_nombre}</strong></td>
+          <td>${v.obra_nombre || 'General'}</td>
+          <td style="font-family:var(--mono); color:#fbbf24; font-weight:700;">${Number(v.vale_adelanto).toLocaleString('es-PY')} Gs.</td>
+          <td>${v.observacion || '-'}</td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="editarValeModal(${v.id}, ${v.vale_adelanto}, '${v.observacion || ''}')">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="eliminarVale(${v.id})">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('tbVales').innerHTML = rowsVales;
+
+      // 6. Bobcat
+      const rowsBobRes = bobcat.slice(0, 4).map(b => `
+        <tr>
+          <td><strong>${b.cliente}</strong></td>
+          <td>${b.zona_destino}</td>
+          <td style="font-family:var(--mono); color:#34d399;">${Number(b.total_facturado).toLocaleString('es-PY')} Gs.</td>
+          <td><span class="badge-status ${b.estado === 'finalizado_cobrado' ? 'badge-green' : 'badge-amber'}">${b.estado === 'finalizado_cobrado' ? 'Cobrado' : 'Agendado'}</span></td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="enviarOrdenRamonWA(${b.id})">WhatsApp</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('tbBobcatResumen').innerHTML = rowsBobRes;
+
+      const rowsBob = bobcat.map(b => `
+        <tr>
+          <td>#${b.id}</td>
+          <td><strong>${b.cliente}</strong></td>
+          <td style="font-family:var(--mono);">${b.telefono_cliente || '-'}</td>
+          <td>${b.zona_destino}</td>
+          <td>${new Date(b.fecha_servicio).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+          <td>${b.horas_pactadas} hs</td>
+          <td><strong style="color:${b.horas_reales > 0 ? '#34d399' : '#94a3b8'}">${b.horas_reales > 0 ? b.horas_reales + ' hs' : '-'}</strong></td>
+          <td style="font-family:var(--mono); color:#34d399; font-weight:700;">${Number(b.total_facturado).toLocaleString('es-PY')} Gs.</td>
+          <td><span class="badge-status ${b.estado === 'finalizado_cobrado' ? 'badge-green' : 'badge-amber'}">${b.estado === 'finalizado_cobrado' ? 'Cobrado' : 'Agendado'}</span></td>
+          <td>
+            <button class="btn btn-default btn-xs" onclick="enviarOrdenRamonWA(${b.id})">A Ramón</button>
+            <button class="btn btn-default btn-xs" onclick="editarBobcatModal(${b.id})">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="eliminarBobcat(${b.id}, '${b.cliente}')">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('tbBobcat').innerHTML = rowsBob;
+
+      // 7. Materiales
+      const rowsMat = materiales.map(m => {
+        const recibido = m.estado === 'recibido';
+        return `
+          <tr>
+            <td>#${m.id}</td>
+            <td>${new Date(m.fecha_entrega).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+            <td><strong>${m.material}</strong></td>
+            <td style="color:#fbbf24; font-weight:600;">${m.cantidad}</td>
+            <td>${m.proveedor || '-'}</td>
+            <td>${m.obra || 'Obra'}</td>
+            <td>${m.responsable_recepcion || '-'}</td>
+            <td>
+              <span class="badge-status ${recibido ? 'badge-green' : 'badge-amber'}">
+                ${recibido ? 'Recibido' : 'Programado'}
+              </span>
+              ${recibido && m.remision_nro ? `<span style="font-size:10px; color:#64748b; margin-left:4px;">${m.remision_nro}</span>` : ''}
+            </td>
+            <td>
+              ${!recibido ? `<button class="btn btn-success btn-xs" onclick="confirmarRecepcion(${m.id})">✓ Recibir</button>` : ''}
+              <button class="btn btn-default btn-xs" onclick="editarMaterialModal(${m.id})">Editar</button>
+              <button class="btn btn-danger btn-xs" onclick="eliminarMaterial(${m.id}, '${m.material}')">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      document.getElementById('tbMateriales').innerHTML = rowsMat;
+
+      // 8. Contabilidad
+      document.getElementById('contabIngresos').innerText = Number(contabilidad.total_ingresos).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('contabBobcatDetalle').innerText = `Cobrado: ${Number(contabilidad.total_bobcat_cobrado).toLocaleString('es-PY')} • Pendiente: ${Number(contabilidad.total_bobcat_pendiente).toLocaleString('es-PY')}`;
+      document.getElementById('contabEgresos').innerText = Number(contabilidad.total_egresos_jornales).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('contabVales').innerText = Number(contabilidad.total_vales_adelantados).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('contabSaldoLiquido').innerText = Number(contabilidad.saldo_liquido_sabado).toLocaleString('es-PY') + ' Gs.';
+
+      document.getElementById('ctaIngresos').innerText = Number(contabilidad.total_ingresos).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('ctaJornales').innerText = Number(contabilidad.total_egresos_jornales).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('ctaVales').innerText = Number(contabilidad.total_vales_adelantados).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('ctaLiquido').innerText = Number(contabilidad.saldo_liquido_sabado).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('ctaMargen').innerText = Number(contabilidad.balance_neto_operativo).toLocaleString('es-PY') + ' Gs.';
+      document.getElementById('ctaMargen').style.color = contabilidad.balance_neto_operativo >= 0 ? '#34d399' : '#f87171';
+
+      // 9. Agenda Diaria
+      document.getElementById('boxAgenda').innerHTML = `
+        <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--primary); margin-bottom:12px;">
+          <h4 style="color:#fff; margin-bottom:6px;">Obras en Curso (${obras.length}):</h4>
+          ${obras.map(o => `• <strong>${o.nombre}</strong> (${o.ubicacion}): ${o.etapa_actual} [Avance: ${o.porcentaje_avance}%]`).join('<br>')}
+        </div>
+        <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--accent-amber); margin-bottom:12px;">
+          <h4 style="color:#fff; margin-bottom:6px;">Servicios de Bobcat con Operador Ramón:</h4>
+          ${bobcat.filter(b => b.estado === 'agendado').map(b => `• <strong>${b.cliente}</strong> en ${b.zona_destino} (${b.horas_pactadas} hs pactadas). Contacto: ${b.telefono_cliente || 'N/A'}`).join('<br>') || '• Sin servicios agendados para hoy.'}
+        </div>
+        <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid var(--accent-green); margin-bottom:12px;">
+          <h4 style="color:#fff; margin-bottom:6px;">Llegada de Materiales Pendientes:</h4>
+          ${materiales.filter(m => m.estado !== 'recibido').map(m => `• <strong>${m.cantidad} ${m.material}</strong> en ${m.obra} (Proveedor: ${m.proveedor})`).join('<br>') || '• Todas las cargas recibidas.'}
+        </div>
+        <div style="background:#090a0f; padding:16px; border-radius:6px; border-left:3px solid #a855f7;">
+          <h4 style="color:#fff; margin-bottom:6px;">Proyección de Pagos Sábado:</h4>
+          • Vales descontables acumulados: <strong style="color:#fbbf24;">${Number(contabilidad.total_vales_adelantados).toLocaleString('es-PY')} Gs.</strong><br>
+          • Monto líquido neto a pagar a los funcionarios: <strong style="color:#34d399;">${Number(contabilidad.saldo_liquido_sabado).toLocaleString('es-PY')} Gs.</strong>
+        </div>
+      `;
+    }
+
+    // ==================== OPERACIONES CRUD ====================
+
+    // OBRAS
+    function abrirModalCrearObra() {
+      document.getElementById('modalObraTitulo').innerText = 'Nueva Obra';
+      document.getElementById('obraId').value = '';
+      document.getElementById('obraNombre').value = '';
+      document.getElementById('obraUbicacion').value = '';
+      document.getElementById('obraEtapa').value = 'Inicio';
+      document.getElementById('obraAvance').value = '10';
+      document.getElementById('obraEstado').value = 'activa';
+      abrirModal('modalObra');
+    }
+
+    function editarObraModal(id) {
+      const o = DATA.obras.find(x => x.id === id);
+      if (!o) return;
+      document.getElementById('modalObraTitulo').innerText = `Editar Obra #${id}`;
+      document.getElementById('obraId').value = o.id;
+      document.getElementById('obraNombre').value = o.nombre;
+      document.getElementById('obraUbicacion').value = o.ubicacion;
+      document.getElementById('obraEtapa').value = o.etapa_actual;
+      document.getElementById('obraAvance').value = o.porcentaje_avance;
+      document.getElementById('obraEstado').value = o.estado || 'activa';
+      abrirModal('modalObra');
+    }
+
+    async function guardarObra() {
+      const id = document.getElementById('obraId').value;
+      const nombre = document.getElementById('obraNombre').value.trim();
+      const ubicacion = document.getElementById('obraUbicacion').value.trim();
+      const etapa_actual = document.getElementById('obraEtapa').value.trim();
+      const porcentaje_avance = Number(document.getElementById('obraAvance').value);
+      const estado = document.getElementById('obraEstado').value;
+
+      if (!nombre || !ubicacion) return alert('Complete nombre y ubicación.');
+
+      const accion = id ? 'editar_obra' : 'crear_obra';
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion,
+          data: { id: Number(id), nombre, ubicacion, etapa_actual, porcentaje_avance, estado }
+        })
+      });
+
+      cerrarModal('modalObra');
+      cargarTodo();
+    }
+
+    async function eliminarObra(id, nombre) {
+      if (!confirm(`¿Está seguro de eliminar la obra "${nombre}"? Esta acción borrará las asignaciones vinculadas.`)) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_obra', data: { id } })
+      });
+      cargarTodo();
+    }
+
+    // PERSONALES (CON MULTI-OBRAS)
+    function abrirModalCrearPersonal() {
+      document.getElementById('modalPersonalTitulo').innerText = 'Nuevo Funcionario';
+      document.getElementById('personalId').value = '';
+      document.getElementById('personalNombre').value = '';
+      document.getElementById('personalJornal').value = '150000';
+      document.getElementById('personalTelefono').value = '';
+      document.querySelectorAll('input[name="chkObra"]').forEach(c => c.checked = false);
+      abrirModal('modalPersonal');
+    }
+
+    function editarPersonalModal(id) {
+      const p = DATA.personales.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('modalPersonalTitulo').innerText = `Editar Funcionario #${id}`;
+      document.getElementById('personalId').value = p.id;
+      document.getElementById('personalNombre').value = p.nombre;
+      document.getElementById('personalCargo').value = p.cargo;
+      document.getElementById('personalJornal').value = p.jornal_diario;
+      document.getElementById('personalTelefono').value = p.telefono || '';
+
+      const asignadas = (p.obras_ids || []).map(Number);
+      document.querySelectorAll('input[name="chkObra"]').forEach(c => {
+        c.checked = asignadas.includes(Number(c.value));
+      });
+
+      abrirModal('modalPersonal');
+    }
+
+    async function guardarPersonal() {
+      const id = document.getElementById('personalId').value;
+      const nombre = document.getElementById('personalNombre').value.trim();
+      const cargo = document.getElementById('personalCargo').value;
+      const jornal_diario = Number(document.getElementById('personalJornal').value);
+      const telefono = document.getElementById('personalTelefono').value.trim();
+
+      const obras_ids = Array.from(document.querySelectorAll('input[name="chkObra"]:checked')).map(c => Number(c.value));
+
+      if (!nombre) return alert('Ingrese el nombre del funcionario.');
+
+      const accion = id ? 'editar_personal' : 'crear_personal';
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion,
+          data: { id: Number(id), nombre, cargo, jornal_diario, telefono, obras_ids }
+        })
+      });
+
+      cerrarModal('modalPersonal');
+      cargarTodo();
+    }
+
+    async function eliminarPersonal(id, nombre) {
+      if (!confirm(`¿Eliminar funcionario "${nombre}"? Se removerán sus vales y asignaciones.`)) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_personal', data: { id } })
+      });
+      cargarTodo();
+    }
+
+    // VALES
+    function abrirModalCrearVale() {
+      document.getElementById('modalValeTitulo').innerText = 'Registrar Vale';
+      document.getElementById('valeId').value = '';
+      document.getElementById('rowValePersonal').style.display = 'flex';
+      document.getElementById('valeMonto').value = '';
+      document.getElementById('valeObservacion').value = '';
+      abrirModal('modalVale');
+    }
+
+    function editarValeModal(id, monto, obs) {
+      document.getElementById('modalValeTitulo').innerText = `Editar Vale #${id}`;
+      document.getElementById('valeId').value = id;
+      document.getElementById('rowValePersonal').style.display = 'none';
+      document.getElementById('valeMonto').value = monto;
+      document.getElementById('valeObservacion').value = obs;
+      abrirModal('modalVale');
+    }
+
+    async function guardarVale() {
+      const id = document.getElementById('valeId').value;
+      const vale = Number(document.getElementById('valeMonto').value);
+      const observacion = document.getElementById('valeObservacion').value.trim();
+
+      if (!vale || vale <= 0) return alert('Ingrese un monto válido.');
+
+      if (id) {
+        await fetch(API_BASE + '/api/acciones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accion: 'editar_vale',
+            data: { id: Number(id), vale_adelanto: vale, observacion }
+          })
+        });
+      } else {
+        const personal_id = document.getElementById('valePersonalId').value;
+        await fetch(API_BASE + '/api/acciones', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accion: 'registrar_vale',
+            data: { personal_id: Number(personal_id), vale, observacion }
+          })
+        });
+      }
+
+      cerrarModal('modalVale');
+      cargarTodo();
+    }
+
+    async function eliminarVale(id) {
+      if (!confirm('¿Eliminar este vale? El monto se restituirá al salario neto del funcionario.')) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_vale', data: { id } })
+      });
+      cargarTodo();
+    }
+
+    // BOBCAT
+    function abrirModalCrearBobcat() {
+      document.getElementById('modalBobcatTitulo').innerText = 'Nuevo Servicio Bobcat';
+      document.getElementById('bobcatId').value = '';
+      document.getElementById('bobcatCliente').value = '';
+      document.getElementById('bobcatTelefono').value = '';
+      document.getElementById('bobcatZona').value = '';
+      document.getElementById('bobcatHorasPactadas').value = '4';
+      document.getElementById('bobcatHorasReales').value = '0';
+      document.getElementById('bobcatEstado').value = 'agendado';
+      abrirModal('modalBobcat');
+    }
+
+    function editarBobcatModal(id) {
+      const b = DATA.bobcat.find(x => x.id === id);
+      if (!b) return;
+      document.getElementById('modalBobcatTitulo').innerText = `Editar Servicio Bobcat #${id}`;
+      document.getElementById('bobcatId').value = b.id;
+      document.getElementById('bobcatCliente').value = b.cliente;
+      document.getElementById('bobcatTelefono').value = b.telefono_cliente || '';
+      document.getElementById('bobcatZona').value = b.zona_destino;
+      document.getElementById('bobcatHorasPactadas').value = b.horas_pactadas;
+      document.getElementById('bobcatHorasReales').value = b.horas_reales || '0';
+      document.getElementById('bobcatEstado').value = b.estado;
+      abrirModal('modalBobcat');
+    }
+
+    async function guardarBobcat() {
+      const id = document.getElementById('bobcatId').value;
+      const cliente = document.getElementById('bobcatCliente').value.trim();
+      const telefono = document.getElementById('bobcatTelefono').value.trim();
+      const zona = document.getElementById('bobcatZona').value.trim();
+      const fecha = document.getElementById('bobcatFecha').value;
+      const horas_pactadas = Number(document.getElementById('bobcatHorasPactadas').value);
+      const horas_reales = Number(document.getElementById('bobcatHorasReales').value);
+      const estado = document.getElementById('bobcatEstado').value;
+
+      if (!cliente || !zona) return alert('Complete cliente y zona.');
+
+      const accion = id ? 'editar_bobcat' : 'crear_bobcat';
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion,
+          data: {
+            id: Number(id),
+            cliente,
+            telefono,
+            zona,
+            fecha,
+            horas: horas_pactadas,
+            horas_pactadas,
+            horas_reales,
+            estado
+          }
+        })
+      });
+
+      cerrarModal('modalBobcat');
+      cargarTodo();
+    }
+
+    async function eliminarBobcat(id, cliente) {
+      if (!confirm(`¿Eliminar el servicio de Bobcat de "${cliente}"?`)) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_bobcat', data: { id } })
+      });
+      cargarTodo();
+    }
+
+    // MATERIALES
+    function abrirModalCrearMaterial() {
+      document.getElementById('modalMaterialTitulo').innerText = 'Registrar Carga de Material';
+      document.getElementById('materialId').value = '';
+      document.getElementById('matNombre').value = '';
+      document.getElementById('matCantidad').value = '';
+      document.getElementById('matProveedor').value = '';
+      document.getElementById('matResponsable').value = 'Capataz';
+      document.getElementById('matEstado').value = 'programado';
+      document.getElementById('matRemision').value = '';
+      abrirModal('modalMaterial');
+    }
+
+    function editarMaterialModal(id) {
+      const m = DATA.materiales.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById('modalMaterialTitulo').innerText = `Editar Material #${id}`;
+      document.getElementById('materialId').value = m.id;
+      document.getElementById('matNombre').value = m.material;
+      document.getElementById('matCantidad').value = m.cantidad;
+      document.getElementById('matProveedor').value = m.proveedor || '';
+      document.getElementById('matObraId').value = m.obra_id;
+      document.getElementById('matResponsable').value = m.responsable_recepcion || '';
+      document.getElementById('matEstado').value = m.estado;
+      document.getElementById('matRemision').value = m.remision_nro || '';
+      abrirModal('modalMaterial');
+    }
+
+    async function guardarMaterial() {
+      const id = document.getElementById('materialId').value;
+      const material = document.getElementById('matNombre').value.trim();
+      const cantidad = document.getElementById('matCantidad').value.trim();
+      const proveedor = document.getElementById('matProveedor').value.trim();
+      const obra_id = Number(document.getElementById('matObraId').value);
+      const fecha_entrega = document.getElementById('matFecha').value;
+      const responsable_recepcion = document.getElementById('matResponsable').value.trim();
+      const estado = document.getElementById('matEstado').value;
+      const remision_nro = document.getElementById('matRemision').value.trim();
+
+      if (!material || !cantidad) return alert('Complete material y cantidad.');
+
+      const accion = id ? 'editar_material' : 'registrar_material';
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion,
+          data: { id: Number(id), material, cantidad, proveedor, obra_id, fecha_entrega, responsable_recepcion, estado, remision_nro }
+        })
+      });
+
+      cerrarModal('modalMaterial');
+      cargarTodo();
+    }
+
+    async function confirmarRecepcion(id) {
+      const rem = prompt('Ingrese N° de Remisión del Proveedor:', 'REM-' + Math.floor(1000 + Math.random()*9000));
+      if (rem === null) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'marcar_material_recibido',
+          data: { material_id: id, remision_nro: rem || 'S/N' }
+        })
+      });
+      cargarTodo();
+    }
+
+    async function eliminarMaterial(id, mat) {
+      if (!confirm(`¿Eliminar registro de material "${mat}"?`)) return;
+      await fetch(API_BASE + '/api/acciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar_material', data: { id } })
+      });
+      cargarTodo();
+    }
+
+    // ==================== EXPORTACIÓN CONTABILIDAD (CSV) ====================
+
+    function exportarContabilidadCSV() {
+      if (!DATA) return;
+      const { contabilidad, bobcat, personales, vales_detalle } = DATA;
+
+      let csv = '\uFEFF'; // BOM para compatibilidad con Excel
+      csv += 'REPORTE CONTABLE Y FINANCIERO - CONSTRUCTORA CDE\r\n';
+      csv += `Fecha de Emisión;${new Date().toLocaleDateString('es-PY')} ${new Date().toLocaleTimeString('es-PY')}\r\n\r\n`;
+
+      csv += 'RESUMEN EJECUTIVO\r\n';
+      csv += `Total Ingresos Maquinaria Bobcat;${contabilidad.total_ingresos} Gs.\r\n`;
+      csv += `Total Presupuesto Jornales Semana;${contabilidad.total_egresos_jornales} Gs.\r\n`;
+      csv += `Total Vales Anticipados;${contabilidad.total_vales_adelantados} Gs.\r\n`;
+      csv += `Saldo Líquido Requerido Sábado;${contabilidad.saldo_liquido_sabado} Gs.\r\n`;
+      csv += `Balance Operativo Neto;${contabilidad.balance_neto_operativo} Gs.\r\n\r\n`;
+
+      csv += 'DETALLE DE FACTURACIÓN BOBCAT\r\n';
+      csv += 'ID;Cliente;Zona;Horas Pactadas;Horas Reales;Tarifa/Hora;Flete;Total Facturado;Estado\r\n';
+      bobcat.forEach(b => {
+        csv += `${b.id};"${b.cliente}";"${b.zona_destino}";${b.horas_pactadas};${b.horas_reales};${b.tarifa_hora};${b.costo_traslado};${b.total_facturado};"${b.estado}"\r\n`;
+      });
+
+      csv += '\r\nDETALLE DE LIQUIDACIÓN DE FUNCIONARIOS\r\n';
+      csv += 'ID;Funcionario;Cargo;Obras Asignadas;Jornal Diario;Días;Total Jornales;Vales Descontables;Neto Sábado\r\n';
+      personales.forEach(p => {
+        const obrasStr = (p.obras_asignadas || []).map(o => o.nombre).join(' / ');
+        const total = Number(p.jornal_diario) * 5;
+        const vales = Number(p.total_vales || 0);
+        csv += `${p.id};"${p.nombre}";"${p.cargo}";"${obrasStr}";${p.jornal_diario};5;${total};${vales};${total - vales}\r\n`;
+      });
+
+      descargarArchivoCSV(csv, `Contabilidad_Obras_CDE_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    function exportarPlanillaSabadoCSV() {
+      if (!DATA) return;
+      const { personales } = DATA;
+
+      let csv = '\uFEFF';
+      csv += 'PLANILLA DE LIQUIDACIÓN DE JORNALES - SÁBADO\r\n';
+      csv += `Fecha;${new Date().toLocaleDateString('es-PY')}\r\n\r\n`;
+      csv += 'ID;Funcionario;Cargo;Obras Asignadas;Jornal Diario (Gs.);Días Trabajados;Total Ganado (Gs.);Vales Descontables (Gs.);Neto a Pagar el Sábado (Gs.)\r\n';
+
+      personales.forEach(p => {
+        const obrasStr = (p.obras_asignadas || []).map(o => o.nombre).join(' | ');
+        const dias = 5;
+        const total = Number(p.jornal_diario) * dias;
+        const vales = Number(p.total_vales || 0);
+        const neto = total - vales;
+        csv += `${p.id};"${p.nombre}";"${p.cargo}";"${obrasStr}";${p.jornal_diario};${dias};${total};${vales};${neto}\r\n`;
+      });
+
+      descargarArchivoCSV(csv, `Planilla_Sabado_Jornales_${new Date().toISOString().slice(0, 10)}.csv`);
+    }
+
+    function descargarArchivoCSV(contenido, nombreArchivo) {
+      const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', nombreArchivo);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ==================== DISPATCH WHATSAPP ====================
+
+    function enviarOrdenRamonWA(bobcatId) {
+      if (!DATA || !DATA.bobcat) return;
+      const b = DATA.bobcat.find(x => x.id === bobcatId);
+      if (!b) return;
+
+      const texto = `*ORDEN DE SERVICIO BOBCAT - CDE*\n` +
+        `Operador: Ramón\n` +
+        `Cliente: ${b.cliente}\n` +
+        `Contacto: ${b.telefono_cliente || 'Coordinar con Ing.'}\n` +
+        `Zona: ${b.zona_destino}\n` +
+        `Horas contratadas: ${b.horas_pactadas} horas\n` +
+        `Flete traslado: 250.000 Gs.\n` +
+        `Tarifa: 250.000 Gs./h\n\n` +
+        `*Instrucción:* Favor reportar foto del horómetro al iniciar y terminar.`;
+
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+
+    function enviarAgendaIngenieroWA() {
+      if (!DATA) return;
+      const { obras, bobcat, materiales, contabilidad } = DATA;
+
+      let msg = `*AGENDA DIARIA - ING. CIVIL CDE*\n` +
+        `Fecha: ${new Date().toLocaleDateString('es-PY')}\n\n` +
+        `*OBRAS ACTIVAS:*\n`;
+      obras.forEach(o => {
+        msg += `• ${o.nombre}: ${o.etapa_actual} (${o.porcentaje_avance}%)\n`;
+      });
+
+      msg += `\n*MAQUINARIA BOBCAT:*\n`;
+      const pend = bobcat.filter(b => b.estado === 'agendado');
+      if (pend.length) {
+        pend.forEach(b => {
+          msg += `• ${b.cliente} en ${b.zona_destino} (${b.horas_pactadas} hs)\n`;
+        });
+      } else {
+        msg += `• Sin servicios agendados hoy.\n`;
+      }
+
+      msg += `\n*MATERIALES PENDIENTES:*\n`;
+      const pendMat = materiales.filter(m => m.estado !== 'recibido');
+      if (pendMat.length) {
+        pendMat.forEach(m => {
+          msg += `• ${m.cantidad} ${m.material} (${m.obra})\n`;
+        });
+      } else {
+        msg += `• Al día, sin cargas pendientes.\n`;
+      }
+
+      msg += `\n*FINANZAS SEMANA:*\n` +
+        `• Vales acumulados a deducir: ${Number(contabilidad.total_vales_adelantados).toLocaleString('es-PY')} Gs.\n` +
+        `• Efectivo neto para sábado: ${Number(contabilidad.saldo_liquido_sabado).toLocaleString('es-PY')} Gs.`;
+
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // Auto-refresco en segundo plano cada 8 segundos
+    setInterval(cargarTodo, 8000);
+
+    // Carga inicial
+    cargarTodo();
+  </script>
+</body>
+</html>
