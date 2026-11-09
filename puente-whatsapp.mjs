@@ -85,6 +85,13 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
+  // Endpoint de ping / anti-hibernación (para Render 24/7)
+  if (req.url === '/api/ping' || req.url === '/ping') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: true, bot: 'despierto_24_7', hora: new Date().toISOString() }));
+  }
+
   // API para consultar estado y QR desde el frontend del sistema web
   if (req.url === '/api/estado-qr' || req.url === '/api/estado') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -393,6 +400,21 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`👉 Abre en tu navegador: http://localhost:${PORT}`);
   console.log('========================================================');
 });
+
+// Mecanismo Anti-Hibernación Automático (Render / Cloud 24/7)
+const EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL;
+if (EXTERNAL_URL) {
+  console.log(`⏰ Anti-hibernación activado: auto-ping a ${EXTERNAL_URL} cada 9 minutos`);
+  setInterval(async () => {
+    try {
+      const pingUrl = EXTERNAL_URL.replace(/\/$/, '') + '/api/ping';
+      const r = await fetch(pingUrl);
+      console.log(`📡 [Keep-Alive] Señal enviada a ${pingUrl} - Status: ${r.status}`);
+    } catch (e) {
+      console.warn('Aviso en keep-alive ping:', e.message);
+    }
+  }, 9 * 60 * 1000); // Cada 9 minutos (antes de los 15 min de Render)
+}
 
 // 4. Procesamiento Inteligente de Mensajes hacia Neon
 async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {

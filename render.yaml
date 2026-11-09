@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: obras-cde-bot
+    env: node
+    plan: free
+    region: ohio
+    buildCommand: npm install
+    startCommand: node puente-whatsapp.mjs
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
