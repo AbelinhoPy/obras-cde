@@ -5,7 +5,7 @@
   "main": "api/index.js",
   "type": "module",
   "scripts": {
-    "start": "node api/local-server.js"
+    "start": "node puente-whatsapp.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import qrcodeTerminal from 'qrcode-terminal';
 import http from 'http';
 import fs from 'fs';
+import path from 'path';
 import { neon } from '@neondatabase/serverless';
 
 const makeWASocket = makeWASocketPkg.default || makeWASocketPkg;
@@ -17,6 +18,59 @@ if (!dbUrl && fs.existsSync('.env')) {
   if (match) dbUrl = match[1];
 }
 const sql = dbUrl ? neon(dbUrl) : null;
+const AUTH_DIR = './auth_info_baileys';
+
+// Sincronización de credenciales con Neon PostgreSQL (Persistencia total en la nube)
+async function restaurarSesionDesdeDB() {
+  if (!sql) return;
+  try {
+    if (!fs.existsSync(AUTH_DIR)) {
+      fs.mkdirSync(AUTH_DIR, { recursive: true });
+    }
+    const archivosLocales = fs.readdirSync(AUTH_DIR);
+    if (archivosLocales.length === 0) {
+      console.log('🔄 Verificando sesión de WhatsApp guardada en Neon PostgreSQL...');
+      const filas = await sql`SELECT clave, valor FROM whatsapp_sesion`;
+      if (filas.length > 0) {
+        console.log(`📦 Restaurando ${filas.length} credenciales desde Neon...`);
+        for (const fila of filas) {
+          fs.writeFileSync(path.join(AUTH_DIR, fila.clave), fila.valor, 'utf8');
+        }
+        console.log('✅ Sesión restaurada con éxito desde la nube.');
+      }
+    }
+  } catch (err) {
+    console.warn('Aviso al restaurar sesión desde DB:', err.message);
+  }
+}
+
+async function respaldarSesionHaciaDB() {
+  if (!sql) return;
+  try {
+    if (!fs.existsSync(AUTH_DIR)) return;
+    const archivos = fs.readdirSync(AUTH_DIR);
+    for (const arch of archivos) {
+      const contenido = fs.readFileSync(path.join(AUTH_DIR, arch), 'utf8');
+      await sql`
+        INSERT INTO whatsapp_sesion (clave, valor, actualizado_en)
+        VALUES (${arch}, ${contenido}, NOW())
+        ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor, actualizado_en = NOW()
+      `;
+    }
+  } catch (err) {
+    console.warn('Aviso respaldando sesión en DB:', err.message);
+  }
+}
+
+async function limpiarSesionEnDB() {
+  if (!sql) return;
+  try {
+    await sql`TRUNCATE TABLE whatsapp_sesion`;
+    console.log('🗑️ Sesión eliminada de Neon PostgreSQL');
+  } catch (err) {
+    console.warn('Error al limpiar sesión en DB:', err.message);
+  }
+}
 
 // 2. Estado Global
 let qrCodeRaw = null;
@@ -71,8 +125,9 @@ const server = http.createServer(async (req, res) => {
     if (sock) {
       await sock.logout();
     }
-    if (fs.existsSync('./auth_info_baileys')) {
-      fs.rmSync('./auth_info_baileys', { recursive: true, force: true });
+    await limpiarSesionEnDB();
+    if (fs.existsSync(AUTH_DIR)) {
+      fs.rmSync(AUTH_DIR, { recursive: true, force: true });
     }
     estadoConexion = 'esperando_qr';
     usuarioConectado = null;
@@ -331,10 +386,11 @@ const server = http.createServer(async (req, res) => {
   res.end(html);
 });
 
-server.listen(3000, () => {
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
   console.log('========================================================');
-  console.log('🚀 SERVIDOR LOCAL DE WHATSAPP INICIADO');
-  console.log('👉 Abre en tu navegador: http://localhost:3000');
+  console.log(`🚀 SERVIDOR DE WHATSAPP INICIADO EN PUERTO ${PORT}`);
+  console.log(`👉 Abre en tu navegador: http://localhost:${PORT}`);
   console.log('========================================================');
 });
 
@@ -569,7 +625,8 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
 // 5. Motor de Baileys para Conexión con WhatsApp
 async function iniciarWhatsApp() {
   try {
-    const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
+    await restaurarSesionDesdeDB();
+    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
 
     sock = makeWASocket({
       auth: state,
@@ -577,7 +634,10 @@ async function iniciarWhatsApp() {
       printQRInTerminal: false
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    sock.ev.on('creds.update', async () => {
+      await saveCreds();
+      await respaldarSesionHaciaDB();
+    });
 
     sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;

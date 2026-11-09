@@ -804,6 +804,14 @@
             <button class="btn btn-default btn-xs" style="flex: 1;" onclick="actualizarEstadoWA()">↻ Refrescar QR</button>
             <button class="btn btn-danger btn-xs" id="btnDesvincularWA" style="display: none;" onclick="desvincularWA()">Desvincular</button>
           </div>
+
+          <div style="margin-top: 12px; width: 100%; text-align: left; background: #090a0f; border: 1px solid #232938; padding: 10px; border-radius: 6px;">
+            <label style="font-size: 10.5px; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Dirección del Servidor Bot (Local o Railway 24/7):</label>
+            <div style="display: flex; gap: 4px;">
+              <input type="text" id="txtPuenteUrl" class="form-ctrl" style="font-size: 11px; padding: 5px 8px; font-family: var(--mono); width: 100%;" placeholder="http://localhost:3000 o https://tu-bot.up.railway.app">
+              <button class="btn btn-default btn-xs" onclick="guardarPuenteUrl()">Guardar</button>
+            </div>
+            <span style="font-size: 9.5px; color: #64748b; margin-top: 3px; display: block;">Permite conectar la web con tu servidor 24/7 en Railway o tu PC local.</span>
         </div>
 
         <!-- TARJETA DE ESTADO, DISPOSITIVO Y SIMULADOR -->
@@ -2236,9 +2244,31 @@
     }
 
     // ==================== INTEGRACIÓN WHATSAPP QR ====================
+    function getPuenteWAUrl() {
+      const custom = localStorage.getItem('WA_PUENTE_URL');
+      if (custom && custom.trim()) return custom.trim().replace(/\/$/, '');
+      return 'http://localhost:3000';
+    }
+
+    function guardarPuenteUrl() {
+      const input = document.getElementById('txtPuenteUrl');
+      const val = (input?.value || '').trim();
+      if (val) {
+        localStorage.setItem('WA_PUENTE_URL', val);
+        alert('URL del Bot guardada: ' + val);
+      } else {
+        localStorage.removeItem('WA_PUENTE_URL');
+        alert('Restablecido a http://localhost:3000');
+      }
+      actualizarEstadoWA();
+    }
+
     async function actualizarEstadoWA() {
+      const puenteUrl = getPuenteWAUrl();
+      const txtInput = document.getElementById('txtPuenteUrl');
+      if (txtInput && !txtInput.value) txtInput.value = puenteUrl;
       try {
-        const res = await fetch('http://localhost:3000/api/estado-qr');
+        const res = await fetch(`${puenteUrl}/api/estado-qr`);
         if (!res.ok) throw new Error('Servidor QR no responde');
         const data = await res.json();
 
@@ -2285,7 +2315,7 @@
           placeholder.innerHTML = `
             <span style="color:#fbbf24; font-weight:600;">Puente local desconectado</span><br>
             <span style="font-size:10.5px; color:#94a3b8;">Ejecuta <code>node puente-whatsapp.mjs</code> en tu terminal para generar el código QR.</span><br><br>
-            <a href="http://localhost:3000" target="_blank" class="btn btn-default btn-xs" style="margin-top:6px;">Abrir localhost:3000 ↗</a>
+            <a href="${puenteUrl}" target="_blank" class="btn btn-default btn-xs" style="margin-top:6px;">Abrir Servidor ↗</a>
           `;
         }
       }
@@ -2301,7 +2331,7 @@
       divRes.innerHTML = 'Procesando mensaje...';
 
       try {
-        const res = await fetch('http://localhost:3000/api/simular', {
+        const res = await fetch(`${getPuenteWAUrl()}/api/simular`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ texto: txt, remitente: 'Simulador Dashboard' })
@@ -2326,7 +2356,7 @@
     async function desvincularWA() {
       if (!confirm('¿Deseas desvincular el WhatsApp actual?')) return;
       try {
-        await fetch('http://localhost:3000/api/desvincular', { method: 'POST' });
+        await fetch(`${getPuenteWAUrl()}/api/desvincular`, { method: 'POST' });
         actualizarEstadoWA();
       } catch (e) {
         alert('Error al desvincular: ' + e.message);
