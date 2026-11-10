@@ -524,28 +524,93 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
   console.log(`\n📩 Mensaje recibido de ${remitenteNombre} (${remitenteId}): "${textoOriginal}"`);
 
   // ========================================================
-  // 1. SALUDOS Y CONVERSACIÓN NATURAL (CERO MENÚS ROBÓTICOS)
+  // DETECCIÓN DE INTENCIÓN Y LENGUAJE NATURAL
   // ========================================================
-  const esSaludo = /^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|que tal|como andas|como estas|mbaeichapa|epaa|hola amigo|buenas amigo)/i.test(texto);
-  const esTransaccion = texto.includes('vale') || texto.includes('adelanto') || texto.includes('bobcat') || texto.includes('pala') || texto.includes('cemento') || texto.includes('varilla') || texto.includes('lluv') || texto.includes('llov') || texto.includes('compr') || texto.includes('ferret') || texto.includes('horometro');
+  const esTransaccion = texto.includes('vale') || texto.includes('adelanto') || texto.includes('retiro') || texto.includes('anticipo') ||
+                        texto.includes('bobcat') || texto.includes('pala') || texto.includes('maquinaria') || texto.includes('nivelar') ||
+                        ((texto.includes('llego') || texto.includes('llegaron') || texto.includes('descarg') || texto.includes('recib') || texto.includes('vino')) && (texto.includes('cemento') || texto.includes('varilla') || texto.includes('hierro') || texto.includes('arena') || texto.includes('bolsa'))) ||
+                        texto.includes('lluv') || texto.includes('llov') || texto.includes('compr') || texto.includes('ferret') || texto.includes('horometro') ||
+                        texto.includes('cuanto') || texto.includes('saldo') || texto.includes('resumen') || texto.includes('como vamos');
 
-  if (esSaludo && !esTransaccion) {
-    const hora = new Date().getHours();
-    let saludoMomento = 'Buen día';
-    if (hora >= 12 && hora < 19) saludoMomento = 'Buenas tardes';
-    else if (hora >= 19 || hora < 5) saludoMomento = 'Buenas noches';
+  const esSaludoPuro = /^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|que tal|como andas|como estas|mbaeichapa|epaa|que onda|hola amigo|buenas amigo)/i.test(texto) && !esTransaccion && texto.split(' ').length <= 4;
+
+  const esCharlaCorta = /^(todo bien|bien|tranquilo|tranqui|aca andamos|bien bien|todo legal|todo en orden|por suerte bien|bien y vos|bien y tu|legalmente bien)/i.test(texto) && !esTransaccion && texto.split(' ').length <= 5;
+  const esAgradecimiento = (texto.includes('gracias') || texto.includes('agradecido') || texto.includes('valeu')) && !esTransaccion;
+  const esConfirmacion = /^(ok|dale|bueno|perfecto|impecable|excelente|de una|genial|listo|ta|entendido)[\s\!\?\.]*$/i.test(texto) && !esTransaccion;
+  const esPreguntaIdentidad = (texto.includes('quien sos') || texto.includes('que sos') || texto.includes('que haces') || texto.includes('para que servis') || texto.includes('como te llamas'));
+
+  // ========================================================
+  // 1. SALUDOS NATURALES Y REACTIVOS (SIN MENÚS NI DISCURSOS)
+  // ========================================================
+  if (esSaludoPuro && !esTransaccion) {
+    let resp = '';
+    if (texto.includes('mbaeichapa')) {
+      resp = `¡Iporã! ¿Mba'éichapa nde?`;
+    } else if (texto.includes('buen dia') || texto.includes('buenos dias')) {
+      resp = '¡Hola! Buen día, ¿qué tal?';
+    } else if (texto.includes('buenas tardes')) {
+      resp = '¡Buenas tardes! ¿Qué tal?';
+    } else if (texto.includes('buenas noches')) {
+      resp = '¡Buenas noches! ¿Qué tal?';
+    } else {
+      const hora = new Date().getHours();
+      let saludoMomento = 'Buen día';
+      if (hora >= 12 && hora < 19) saludoMomento = 'Buenas tardes';
+      else if (hora >= 19 || hora < 5) saludoMomento = 'Buenas noches';
+      resp = `¡Hola! ${saludoMomento}, ¿qué tal?`;
+    }
 
     resultado = {
       tipo: 'conversacion_saludo',
       icono: '👋',
-      titulo: 'Saludo / Asistente Activo',
-      detalle: `Conversación con ${remitenteNombre}`,
-      respuestaWhatsApp: `¡Hola! ${saludoMomento}. ¿Cómo van los trabajos en las obras hoy?\n\nAvisame cualquier vale, llegada de materiales, horas de la Bobcat o novedad que quieras anotar, o consultame cualquier saldo de la gente.`
+      titulo: 'Saludo',
+      detalle: `${remitenteNombre}`,
+      respuestaWhatsApp: resp
     };
   }
 
   // ========================================================
-  // 2. CONSULTAS DE SALDOS, PLANILLA Y RESUMEN GENERAL
+  // 2. RESPUESTAS DE CORTESÍA / CHARLA CASUAL
+  // ========================================================
+  else if (esCharlaCorta && !esTransaccion) {
+    resultado = {
+      tipo: 'conversacion_cortesia',
+      icono: '😊',
+      titulo: 'Cortesía',
+      detalle: `${remitenteNombre}`,
+      respuestaWhatsApp: '¡Qué bueno! Me alegro. Avisame cualquier cosa que necesites.'
+    };
+  }
+  else if (esAgradecimiento && !esTransaccion) {
+    resultado = {
+      tipo: 'conversacion_agradecimiento',
+      icono: '🙏',
+      titulo: 'Agradecimiento',
+      detalle: `${remitenteNombre}`,
+      respuestaWhatsApp: '¡De nada! A las órdenes.'
+    };
+  }
+  else if (esConfirmacion && !esTransaccion) {
+    resultado = {
+      tipo: 'conversacion_confirmacion',
+      icono: '👍',
+      titulo: 'Confirmación',
+      detalle: `${remitenteNombre}`,
+      respuestaWhatsApp: 'Dale, impecable.'
+    };
+  }
+  else if (esPreguntaIdentidad && !esTransaccion) {
+    resultado = {
+      tipo: 'conversacion_identidad',
+      icono: '🤖',
+      titulo: 'Identidad',
+      detalle: `${remitenteNombre}`,
+      respuestaWhatsApp: 'Soy tu asistente para las obras. Te anoto los vales de la gente, horas de la Bobcat, materiales que llegan y notas de bitácora, o te paso saldos cuando me preguntes.'
+    };
+  }
+
+  // ========================================================
+  // 3. CONSULTAS DE SALDOS, PLANILLA Y RESUMEN GENERAL
   // ========================================================
   else if (texto.includes('cuanto') || texto.includes('saldo') || texto.includes('resumen') || texto.includes('como vamos') || texto.includes('quien') || texto.includes('quienes') || texto.includes('debo')) {
     let respuesta = 'Todo en orden por las obras.';
@@ -561,7 +626,7 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
           const jornalEstimado = Number(personaBuscada.jornal_diario || 130000) * 6; // 6 días semana
           const neto = Math.max(0, jornalEstimado - valesTotal);
 
-          respuesta = `Ing., ${personaBuscada.nombre} tiene anotados ${valesTotal.toLocaleString('es-PY')} Gs. en vales esta semana. Con sus jornales de la semana (${jornalEstimado.toLocaleString('es-PY')} Gs.), el saldo neto para el sábado queda en aproximadamente ${neto.toLocaleString('es-PY')} Gs.`;
+          respuesta = `${personaBuscada.nombre} tiene anotados ${valesTotal.toLocaleString('es-PY')} Gs. en vales esta semana. Su neto para el sábado queda en aprox. ${neto.toLocaleString('es-PY')} Gs.`;
         } else {
           // Resumen general de la semana
           const valesGen = await sql`SELECT COALESCE(SUM(vale_adelanto), 0) as total FROM asistencias_vales`;
@@ -572,11 +637,11 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
           const totalB = Number(bobcatGen[0]?.total || 0).toLocaleString('es-PY');
           const cantObras = obrasActivas[0]?.total || 0;
 
-          respuesta = `Ing., así viene el balance esta semana:\n• Vales entregados a descontar: ${totalV} Gs.\n• Facturado por la Bobcat: ${totalB} Gs.\n• Frentes de obra activos: ${cantObras}\n\n¿Querés que te pase el detalle de algún personal o de alguna obra en particular?`;
+          respuesta = `Así viene la semana:\n• Vales a descontar: ${totalV} Gs.\n• Facturado Bobcat: ${totalB} Gs.\n• Frentes activos: ${cantObras}`;
         }
       }
     } catch (e) {
-      respuesta = 'Hasta ahora tenemos los vales y servicios registrados al día en el sistema. ¿Querés revisar algún personal en específico?';
+      respuesta = 'Hasta ahora tenemos los vales y servicios registrados al día en el sistema.';
     }
 
     resultado = {
@@ -589,7 +654,7 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
   }
 
   // ========================================================
-  // 3. VALES Y ADELANTOS (RESPUESTA HUMANA Y PROFESIONAL)
+  // 4. VALES Y ADELANTOS (DIRECTO Y NATURAL)
   // ========================================================
   else if (texto.includes('vale') || texto.includes('adelanto') || texto.includes('retiro') || texto.includes('anticipo') || texto.includes('plata')) {
     let monto = 150000;
@@ -603,6 +668,13 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
 
     let personalId = null;
     let personalNombre = 'el personal';
+    
+    // Extracción inteligente de nombre del texto
+    const matchPara = textoOriginal.match(/(?:para|a|de)\s+([A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?)/i);
+    if (matchPara && !['la', 'el', 'los', 'las', 'una', 'un', 'obra', 'km', 'mi'].includes(matchPara[1].toLowerCase())) {
+      personalNombre = matchPara[1];
+    }
+
     if (sql) {
       try {
         const pers = await sql`SELECT id, nombre FROM personales`;
@@ -612,7 +684,6 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
           personalNombre = encontrado.nombre;
         } else if (pers.length > 0) {
           personalId = pers[0].id;
-          personalNombre = pers[0].nombre;
         }
       } catch (e) {
         console.warn('Error buscando personal:', e.message);
@@ -635,12 +706,12 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       icono: '💰',
       titulo: 'Vale Registrado',
       detalle: `${personalNombre}: ${monto.toLocaleString('es-PY')} Gs.`,
-      respuestaWhatsApp: `Dale, ya le registré el vale de ${monto.toLocaleString('es-PY')} Gs. a ${personalNombre}. Queda guardado para descontarle automáticamente de su liquidación este sábado.`
+      respuestaWhatsApp: `Listo, ya le anoté el vale de ${monto.toLocaleString('es-PY')} Gs. a ${personalNombre}.`
     };
   }
 
   // ========================================================
-  // 4. DESPACHO DE BOBCAT (AGENDAR SERVICIO)
+  // 5. DESPACHO DE BOBCAT (AGENDAR SERVICIO)
   // ========================================================
   else if (texto.includes('bobcat') || texto.includes('pala') || texto.includes('nivelar') || texto.includes('limpieza de terreno') || texto.includes('maquinaria')) {
     let horas = 4;
@@ -674,12 +745,12 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       icono: '🚜',
       titulo: 'Servicio Bobcat Agendado',
       detalle: `${zona} (${horas} hs) - Total: ${total.toLocaleString('es-PY')} Gs.`,
-      respuestaWhatsApp: `Anotado. Ya agendé la Bobcat para ${zona} por ${horas} horas. Con el traslado de 250.000 Gs., el total queda en ${total.toLocaleString('es-PY')} Gs. y ya le queda en la agenda a Ramón.`
+      respuestaWhatsApp: `Dale, agendé la Bobcat para ${zona} por ${horas} horas (total: ${total.toLocaleString('es-PY')} Gs. con flete). Ya le queda anotado a Ramón.`
     };
   }
 
   // ========================================================
-  // 5. CIERRE DE HORÓMETRO DE RAMÓN (LIQUIDACIÓN)
+  // 6. CIERRE DE HORÓMETRO DE RAMÓN (LIQUIDACIÓN)
   // ========================================================
   else if (texto.includes('horometro') || (texto.includes('ramon') && texto.includes('hora')) || (texto.includes('trabaje') && texto.includes('hora')) || (texto.includes('termino') && texto.includes('hora'))) {
     let horasReales = 5;
@@ -704,15 +775,15 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       tipo: 'cierre_horas_ramon',
       icono: '⏱️',
       titulo: 'Horas de Ramón Computadas',
-      detalle: `${horasReales} horas reales trabajadas. Cobrado: ${total.toLocaleString('es-PY')} Gs.`,
-      respuestaWhatsApp: `Excelente, ya le computé a Ramón las ${horasReales} horas trabajadas en la Bobcat. El servicio queda marcado como cobrado y sumamos ${total.toLocaleString('es-PY')} Gs. a la facturación.`
+      detalle: `${horasReales} horas reales trabajadas.`,
+      respuestaWhatsApp: `Listo, le computé ${horasReales} horas a Ramón en la Bobcat (${total.toLocaleString('es-PY')} Gs.).`
     };
   }
 
   // ========================================================
-  // 6. MATERIALES Y RECEPCIONES
+  // 7. MATERIALES Y RECEPCIONES
   // ========================================================
-  else if (texto.includes('cemento') || texto.includes('varilla') || texto.includes('hierro') || texto.includes('arena') || texto.includes('descargo') || texto.includes('llego') || texto.includes('bolsa')) {
+  else if (texto.includes('cemento') || texto.includes('varilla') || texto.includes('hierro') || texto.includes('arena') || texto.includes('descargo') || texto.includes('descarg') || texto.includes('llego') || texto.includes('bolsa')) {
     let material = 'Materiales';
     if (texto.includes('cemento')) material = 'Cemento Yguazú';
     else if (texto.includes('varilla') || texto.includes('hierro')) material = 'Varillas de Hierro';
@@ -738,12 +809,12 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       icono: '🧱',
       titulo: 'Material Recibido',
       detalle: `${material} (${cantidad}) asentado.`,
-      respuestaWhatsApp: `Recibido, ya cargué ${cantidad} de ${material} al inventario de la obra. Todo al día.`
+      respuestaWhatsApp: `Recibido, ya cargué ${cantidad} de ${material} al inventario de la obra.`
     };
   }
 
   // ========================================================
-  // 7. BITÁCORA DE CAMPO (LLUVIAS, COMPRAS, FOTOS)
+  // 8. BITÁCORA DE CAMPO (LLUVIAS, COMPRAS, FOTOS)
   // ========================================================
   else if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('compr') || texto.includes('ferret') || texto.includes('foto') || texto.includes('retras') || texto.includes('inciden') || texto.includes('nota') || texto.includes('bitacor') || texto.includes('posterg')) {
     let categoria = 'general';
@@ -752,17 +823,17 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
 
     if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('clima')) {
       categoria = 'clima';
-      resp = 'Entendido, ya dejé asentado en la bitácora que se pararon las tareas por lluvia. Así queda constancia formal de la fecha y hora por cualquier reclamo de atraso del dueño.';
+      resp = 'Entendido, ya dejé asentado en la bitácora que se paró por lluvia.';
     } else if (texto.includes('compr') || texto.includes('ferret')) {
       categoria = 'compra_imprevista';
       const matchMil = texto.match(/(\d+)\s*(?:mil|k)/i);
       const matchGs = texto.match(/(\d[\d\.\,]*)/);
       if (matchMil) monto = parseInt(matchMil[1]) * 1000;
       else if (matchGs && parseInt(matchGs[1].replace(/\./g, '')) > 1000) monto = parseInt(matchGs[1].replace(/\./g, ''));
-      resp = `Anotado, ya registré la compra de ferretería por ${monto > 0 ? monto.toLocaleString('es-PY') + ' Gs.' : 'el monto indicado'} como gasto imprevisto de la obra.`;
+      resp = `Anotado, registré el gasto de ferretería por ${monto > 0 ? monto.toLocaleString('es-PY') + ' Gs.' : 'el monto indicado'}.`;
     } else {
       categoria = 'incidencia';
-      resp = 'Listo, ya guardé la novedad en el cuaderno de campo de la obra para que la tengas presente.';
+      resp = 'Listo, ya guardé la novedad en el cuaderno de la obra.';
     }
 
     if (sql) {
@@ -786,7 +857,7 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
   }
 
   // ========================================================
-  // 8. CUALQUIER OTRO MENSAJE LIBRE (HABLA COMO UN HUMANO)
+  // 9. CUALQUIER OTRO MENSAJE LIBRE (NATURAL, SIN TEXTOS LARGOS)
   // ========================================================
   else {
     resultado = {
@@ -794,7 +865,7 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       icono: '💬',
       titulo: 'Mensaje Recibido',
       detalle: `"${textoOriginal}"`,
-      respuestaWhatsApp: 'Entendido. Avisame si querés que te asiente esto en la bitácora de la obra o si necesitás revisar algún saldo de la gente o de la Bobcat.'
+      respuestaWhatsApp: 'Entendido. Decime nomás qué necesitás que te anote o te consulte.'
     };
   }
 
