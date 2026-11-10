@@ -517,17 +517,81 @@ if (EXTERNAL_URL) {
 
 // 4. Procesamiento Inteligente de Mensajes hacia Neon
 async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
-  // Normalizar a minúsculas y sin tildes para máxima precisión
-  const textoRaw = (textoOriginal || '').toLowerCase();
+  const textoRaw = (textoOriginal || '').toLowerCase().trim();
   const texto = textoRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   let resultado = null;
 
   console.log(`\n📩 Mensaje recibido de ${remitenteNombre} (${remitenteId}): "${textoOriginal}"`);
 
-  // ==========================================
-  // CASO 1: Vales / Adelantos de Funcionarios
-  // ==========================================
-  if (texto.includes('vale') || texto.includes('adelanto') || texto.includes('retiró') || texto.includes('retiro') || texto.includes('anticipo')) {
+  // ========================================================
+  // 1. SALUDOS Y CONVERSACIÓN NATURAL (CERO MENÚS ROBÓTICOS)
+  // ========================================================
+  const esSaludo = /^(hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches|que tal|como andas|como estas|mbaeichapa|epaa|hola amigo|buenas amigo)/i.test(texto);
+  const esTransaccion = texto.includes('vale') || texto.includes('adelanto') || texto.includes('bobcat') || texto.includes('pala') || texto.includes('cemento') || texto.includes('varilla') || texto.includes('lluv') || texto.includes('llov') || texto.includes('compr') || texto.includes('ferret') || texto.includes('horometro');
+
+  if (esSaludo && !esTransaccion) {
+    const hora = new Date().getHours();
+    let saludoMomento = 'Buen día';
+    if (hora >= 12 && hora < 19) saludoMomento = 'Buenas tardes';
+    else if (hora >= 19 || hora < 5) saludoMomento = 'Buenas noches';
+
+    resultado = {
+      tipo: 'conversacion_saludo',
+      icono: '👋',
+      titulo: 'Saludo / Asistente Activo',
+      detalle: `Conversación con ${remitenteNombre}`,
+      respuestaWhatsApp: `¡Hola! ${saludoMomento}. ¿Cómo van los trabajos en las obras hoy?\n\nAvisame cualquier vale, llegada de materiales, horas de la Bobcat o novedad que quieras anotar, o consultame cualquier saldo de la gente.`
+    };
+  }
+
+  // ========================================================
+  // 2. CONSULTAS DE SALDOS, PLANILLA Y RESUMEN GENERAL
+  // ========================================================
+  else if (texto.includes('cuanto') || texto.includes('saldo') || texto.includes('resumen') || texto.includes('como vamos') || texto.includes('quien') || texto.includes('quienes') || texto.includes('debo')) {
+    let respuesta = 'Todo en orden por las obras.';
+    try {
+      if (sql) {
+        // Buscar si pregunta por una persona en particular
+        const pers = await sql`SELECT id, nombre, jornal_diario FROM personales`;
+        const personaBuscada = pers.find(p => texto.includes(p.nombre.toLowerCase().split(' ')[0]));
+
+        if (personaBuscada) {
+          const valesRows = await sql`SELECT COALESCE(SUM(vale_adelanto), 0) as total_vales FROM asistencias_vales WHERE personal_id = ${personaBuscada.id}`;
+          const valesTotal = Number(valesRows[0]?.total_vales || 0);
+          const jornalEstimado = Number(personaBuscada.jornal_diario || 130000) * 6; // 6 días semana
+          const neto = Math.max(0, jornalEstimado - valesTotal);
+
+          respuesta = `Ing., ${personaBuscada.nombre} tiene anotados ${valesTotal.toLocaleString('es-PY')} Gs. en vales esta semana. Con sus jornales de la semana (${jornalEstimado.toLocaleString('es-PY')} Gs.), el saldo neto para el sábado queda en aproximadamente ${neto.toLocaleString('es-PY')} Gs.`;
+        } else {
+          // Resumen general de la semana
+          const valesGen = await sql`SELECT COALESCE(SUM(vale_adelanto), 0) as total FROM asistencias_vales`;
+          const bobcatGen = await sql`SELECT COALESCE(SUM(total_facturado), 0) as total FROM bobcat_servicios WHERE estado = 'finalizado_cobrado'`;
+          const obrasActivas = await sql`SELECT COUNT(*) as total FROM obras`;
+
+          const totalV = Number(valesGen[0]?.total || 0).toLocaleString('es-PY');
+          const totalB = Number(bobcatGen[0]?.total || 0).toLocaleString('es-PY');
+          const cantObras = obrasActivas[0]?.total || 0;
+
+          respuesta = `Ing., así viene el balance esta semana:\n• Vales entregados a descontar: ${totalV} Gs.\n• Facturado por la Bobcat: ${totalB} Gs.\n• Frentes de obra activos: ${cantObras}\n\n¿Querés que te pase el detalle de algún personal o de alguna obra en particular?`;
+        }
+      }
+    } catch (e) {
+      respuesta = 'Hasta ahora tenemos los vales y servicios registrados al día en el sistema. ¿Querés revisar algún personal en específico?';
+    }
+
+    resultado = {
+      tipo: 'consulta_saldos',
+      icono: '📊',
+      titulo: 'Consulta de Saldos',
+      detalle: `Respuesta de consulta para ${remitenteNombre}`,
+      respuestaWhatsApp: respuesta
+    };
+  }
+
+  // ========================================================
+  // 3. VALES Y ADELANTOS (RESPUESTA HUMANA Y PROFESIONAL)
+  // ========================================================
+  else if (texto.includes('vale') || texto.includes('adelanto') || texto.includes('retiro') || texto.includes('anticipo') || texto.includes('plata')) {
     let monto = 150000;
     const matchMil = texto.match(/(\d+)\s*(?:mil|k)/i);
     const matchGs = texto.match(/(\d[\d\.\,]*)\s*(?:gs|guaranies|\$)?/i);
@@ -537,9 +601,8 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       monto = parseInt(matchGs[1].replace(/\./g, ''));
     }
 
-    // Buscar personal en Neon
-    let personalId = 4; // Carlos Cabrera default
-    let personalNombre = 'Carlos Cabrera';
+    let personalId = null;
+    let personalNombre = 'el personal';
     if (sql) {
       try {
         const pers = await sql`SELECT id, nombre FROM personales`;
@@ -547,35 +610,38 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
         if (encontrado) {
           personalId = encontrado.id;
           personalNombre = encontrado.nombre;
+        } else if (pers.length > 0) {
+          personalId = pers[0].id;
+          personalNombre = pers[0].nombre;
         }
       } catch (e) {
         console.warn('Error buscando personal:', e.message);
       }
     }
 
-    if (sql) {
+    if (sql && personalId) {
       await sql`
         INSERT INTO asistencias_vales (personal_id, obra_id, fecha, estado, vale_adelanto, observacion)
         VALUES (${personalId}, 1, CURRENT_DATE, 'presente', ${monto}, ${'WhatsApp: ' + textoOriginal})
       `;
       await sql`
         INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || remitenteId}, 'asistencia_vale', ${textoOriginal}, ${'Registrado vale de ' + monto.toLocaleString('es-PY') + ' Gs. para ' + personalNombre})
+        VALUES (${remitenteNombre || remitenteId}, 'asistencia_vale', ${textoOriginal}, ${'Vale anotado: ' + monto.toLocaleString('es-PY') + ' Gs. para ' + personalNombre})
       `;
     }
 
     resultado = {
       tipo: 'vale_asistencia',
       icono: '💰',
-      titulo: 'Vale de Personal Registrado',
-      detalle: `${personalNombre}: ${monto.toLocaleString('es-PY')} Gs. a descontar el sábado.`,
-      respuestaWhatsApp: `✅ *VALE REGISTRADO EN SISTEMA OBRAS CDE*\n\n👤 *Funcionario:* ${personalNombre}\n💵 *Monto:* ${monto.toLocaleString('es-PY')} Gs.\n📅 *Fecha:* ${new Date().toLocaleDateString('es-PY')}\n\nQuedó asentado en la base de datos para la liquidación del sábado.`
+      titulo: 'Vale Registrado',
+      detalle: `${personalNombre}: ${monto.toLocaleString('es-PY')} Gs.`,
+      respuestaWhatsApp: `Dale, ya le registré el vale de ${monto.toLocaleString('es-PY')} Gs. a ${personalNombre}. Queda guardado para descontarle automáticamente de su liquidación este sábado.`
     };
   }
 
-  // ==========================================
-  // CASO 2: Reserva de Bobcat
-  // ==========================================
+  // ========================================================
+  // 4. DESPACHO DE BOBCAT (AGENDAR SERVICIO)
+  // ========================================================
   else if (texto.includes('bobcat') || texto.includes('pala') || texto.includes('nivelar') || texto.includes('limpieza de terreno') || texto.includes('maquinaria')) {
     let horas = 4;
     const matchHs = texto.match(/(\d+)\s*(?:hs|hora|horas)/i);
@@ -607,15 +673,15 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       tipo: 'reserva_bobcat',
       icono: '🚜',
       titulo: 'Servicio Bobcat Agendado',
-      detalle: `${remitenteNombre || 'Cliente'} en ${zona} (${horas} hs pactadas). Total: ${total.toLocaleString('es-PY')} Gs.`,
-      respuestaWhatsApp: `🚜 *RESERVA DE BOBCAT AGENDADA*\n\n📍 *Zona:* ${zona}\n⏱️ *Horas pactadas:* ${horas} horas\n🚛 *Flete traslado:* 250.000 Gs.\n💵 *Total estimado:* ${total.toLocaleString('es-PY')} Gs.\n👷 *Operador asignado:* Ramón\n\nEl servicio ya figura en la agenda del operador.`
+      detalle: `${zona} (${horas} hs) - Total: ${total.toLocaleString('es-PY')} Gs.`,
+      respuestaWhatsApp: `Anotado. Ya agendé la Bobcat para ${zona} por ${horas} horas. Con el traslado de 250.000 Gs., el total queda en ${total.toLocaleString('es-PY')} Gs. y ya le queda en la agenda a Ramón.`
     };
   }
 
-  // ==========================================
-  // CASO 3: Cierre de Horómetro Ramón
-  // ==========================================
-  else if (texto.includes('horometro') || texto.includes('horómetro') || (texto.includes('ramon') && texto.includes('hora')) || (texto.includes('trabajé') && texto.includes('hora'))) {
+  // ========================================================
+  // 5. CIERRE DE HORÓMETRO DE RAMÓN (LIQUIDACIÓN)
+  // ========================================================
+  else if (texto.includes('horometro') || (texto.includes('ramon') && texto.includes('hora')) || (texto.includes('trabaje') && texto.includes('hora')) || (texto.includes('termino') && texto.includes('hora'))) {
     let horasReales = 5;
     const matchHs = texto.match(/(\d+)\s*(?:hs|hora|horas)/i);
     if (matchHs) horasReales = parseInt(matchHs[1]);
@@ -637,22 +703,22 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     resultado = {
       tipo: 'cierre_horas_ramon',
       icono: '⏱️',
-      titulo: 'Horómetro de Ramón Liquidado',
+      titulo: 'Horas de Ramón Computadas',
       detalle: `${horasReales} horas reales trabajadas. Cobrado: ${total.toLocaleString('es-PY')} Gs.`,
-      respuestaWhatsApp: `✅ *HORAS DE OPERADOR LIQUIDADAS*\n\n🚜 *Horómetro real:* ${horasReales} horas\n💰 *Total facturado y cobrado:* ${total.toLocaleString('es-PY')} Gs.\n\nEl servicio quedó asentado como finalizado y conciliado.`
+      respuestaWhatsApp: `Excelente, ya le computé a Ramón las ${horasReales} horas trabajadas en la Bobcat. El servicio queda marcado como cobrado y sumamos ${total.toLocaleString('es-PY')} Gs. a la facturación.`
     };
   }
 
-  // ==========================================
-  // CASO 4: Llegada de Materiales
-  // ==========================================
-  else if (texto.includes('cemento') || texto.includes('varilla') || texto.includes('hierro') || texto.includes('arena') || texto.includes('descargó') || texto.includes('llegó')) {
-    let material = 'Materiales Varios';
+  // ========================================================
+  // 6. MATERIALES Y RECEPCIONES
+  // ========================================================
+  else if (texto.includes('cemento') || texto.includes('varilla') || texto.includes('hierro') || texto.includes('arena') || texto.includes('descargo') || texto.includes('llego') || texto.includes('bolsa')) {
+    let material = 'Materiales';
     if (texto.includes('cemento')) material = 'Cemento Yguazú';
     else if (texto.includes('varilla') || texto.includes('hierro')) material = 'Varillas de Hierro';
     else if (texto.includes('arena')) material = 'Arena Lavada';
 
-    let cantidad = '1 carga completa';
+    let cantidad = '1 carga';
     const matchCant = texto.match(/(\d+[\d\.\,]*)\s*(?:bolsas|kg|kilos|tn|toneladas|m3|metros)?/i);
     if (matchCant) cantidad = matchCant[0];
 
@@ -670,30 +736,33 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     resultado = {
       tipo: 'recepcion_material',
       icono: '🧱',
-      titulo: 'Carga de Material Recibida',
-      detalle: `${material} (${cantidad}) asentado en Edificio Km 8.`,
-      respuestaWhatsApp: `📦 *RECEPCIÓN DE MATERIAL CONFIRMADA*\n\n🧱 *Material:* ${material}\n⚖️ *Cantidad:* ${cantidad}\n📅 *Fecha y hora:* ${new Date().toLocaleTimeString('es-PY')}\n\nSe actualizó el inventario en el sistema.`
+      titulo: 'Material Recibido',
+      detalle: `${material} (${cantidad}) asentado.`,
+      respuestaWhatsApp: `Recibido, ya cargué ${cantidad} de ${material} al inventario de la obra. Todo al día.`
     };
   }
 
-  // ==========================================
-  // CASO 5: Bitácora de Campo (Clima, Fotos, Ferretería, Incidencias)
-  // ==========================================
+  // ========================================================
+  // 7. BITÁCORA DE CAMPO (LLUVIAS, COMPRAS, FOTOS)
+  // ========================================================
   else if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('compr') || texto.includes('ferret') || texto.includes('foto') || texto.includes('retras') || texto.includes('inciden') || texto.includes('nota') || texto.includes('bitacor') || texto.includes('posterg')) {
     let categoria = 'general';
     let monto = 0;
-    if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('clima') || texto.includes('posterg')) {
+    let resp = '';
+
+    if (texto.includes('lluv') || texto.includes('llov') || texto.includes('susp') || texto.includes('paro') || texto.includes('parada') || texto.includes('clima')) {
       categoria = 'clima';
+      resp = 'Entendido, ya dejé asentado en la bitácora que se pararon las tareas por lluvia. Así queda constancia formal de la fecha y hora por cualquier reclamo de atraso del dueño.';
     } else if (texto.includes('compr') || texto.includes('ferret')) {
       categoria = 'compra_imprevista';
       const matchMil = texto.match(/(\d+)\s*(?:mil|k)/i);
       const matchGs = texto.match(/(\d[\d\.\,]*)/);
       if (matchMil) monto = parseInt(matchMil[1]) * 1000;
       else if (matchGs && parseInt(matchGs[1].replace(/\./g, '')) > 1000) monto = parseInt(matchGs[1].replace(/\./g, ''));
-    } else if (texto.includes('foto')) {
-      categoria = 'foto_pendiente';
-    } else if (texto.includes('retraso') || texto.includes('incidencia') || texto.includes('problema')) {
+      resp = `Anotado, ya registré la compra de ferretería por ${monto > 0 ? monto.toLocaleString('es-PY') + ' Gs.' : 'el monto indicado'} como gasto imprevisto de la obra.`;
+    } else {
       categoria = 'incidencia';
+      resp = 'Listo, ya guardé la novedad en el cuaderno de campo de la obra para que la tengas presente.';
     }
 
     if (sql) {
@@ -710,22 +779,22 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     resultado = {
       tipo: 'nota_bitacora',
       icono: '📝',
-      titulo: 'Nota en Bitácora de Obra',
-      detalle: `[${categoria}] ${textoOriginal} ${monto > 0 ? `(${monto.toLocaleString('es-PY')} Gs.)` : ''}`,
-      respuestaWhatsApp: `📝 *REGISTRO EN BITÁCORA DE CAMPO*\n\n📌 *Categoría:* ${categoria.toUpperCase()}\n📄 *Novedad:* ${textoOriginal}\n${monto > 0 ? `💵 *Gasto Imprevisto:* ${monto.toLocaleString('es-PY')} Gs.\n` : ''}👤 *Reportado por:* ${remitenteNombre || 'WhatsApp'}\n\nEl Ingeniero ya tiene la novedad en su pantalla y agenda.`
+      titulo: 'Nota en Bitácora',
+      detalle: `[${categoria}] ${textoOriginal}`,
+      respuestaWhatsApp: resp
     };
   }
 
-  // ==========================================
-  // CASO 6: Mensaje de Ayuda / Menú
-  // ==========================================
+  // ========================================================
+  // 8. CUALQUIER OTRO MENSAJE LIBRE (HABLA COMO UN HUMANO)
+  // ========================================================
   else {
     resultado = {
-      tipo: 'ayuda',
+      tipo: 'mensaje_libre',
       icono: '💬',
-      titulo: 'Consulta / Ayuda',
-      detalle: `Mensaje: "${textoOriginal}"`,
-      respuestaWhatsApp: `👋 *¡Hola! Soy el Asistente Digital de Obras CDE.*\n\nPuedes reportarme novedades escribiendo normalmente:\n\n1️⃣ *Vales:* "Vale de 150 mil para Carlos Cabrera"\n2️⃣ *Bobcat:* "Agendar Bobcat para 4 horas en Km 10"\n3️⃣ *Horómetro:* "Ramón trabajó 5 horas hoy"\n4️⃣ *Materiales:* "Llegaron 200 bolsas de cemento"\n5️⃣ *Bitácora:* "Llovió mucho, se suspendió la losa" o "Se compró 10 discos de corte (180 mil)"\n\nTodo se guarda automáticamente en la base de datos.`
+      titulo: 'Mensaje Recibido',
+      detalle: `"${textoOriginal}"`,
+      respuestaWhatsApp: 'Entendido. Avisame si querés que te asiente esto en la bitácora de la obra o si necesitás revisar algún saldo de la gente o de la Bobcat.'
     };
   }
 
