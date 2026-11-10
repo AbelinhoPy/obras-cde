@@ -801,8 +801,34 @@
           </div>
 
           <div style="margin-top: 14px; display: flex; gap: 8px; width: 100%;">
-            <button class="btn btn-default btn-xs" style="flex: 1;" onclick="actualizarEstadoWA()">↻ Refrescar QR</button>
+            <button class="btn btn-default btn-xs" style="flex: 1;" onclick="forzarRefrescoQR()">↻ Forzar Nuevo QR</button>
             <button class="btn btn-danger btn-xs" id="btnDesvincularWA" style="display: none;" onclick="desvincularWA()">Desvincular</button>
+          </div>
+
+          <!-- ALTERNATIVA: VINCULAR POR CODIGO DE 8 DIGITOS (PAIRING CODE) -->
+          <div style="margin-top: 14px; border-top: 1px solid #232938; padding-top: 14px; width: 100%; text-align: left;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #38bdf8; margin-bottom: 4px;">
+              📲 ¿Problemas con la cámara?
+            </div>
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">
+              Vincula directo con un <strong>Código de 8 dígitos</strong> sin escanear:
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="txtNumeroPairing" class="form-ctrl" placeholder="ej. 0983123456" style="font-size: 11.5px; font-family: var(--mono); padding: 5px 8px; width: 100%;">
+              <button class="btn btn-primary btn-xs" style="white-space: nowrap;" onclick="pedirCodigoPairing()">Pedir Código</button>
+            </div>
+            
+            <div id="boxCodigoPairing" style="display: none; margin-top: 10px; background: #090a0f; border: 1px solid #10b981; border-radius: 6px; padding: 12px; text-align: center;">
+              <div style="font-size: 10.5px; color: #94a3b8;">Tu código para WhatsApp:</div>
+              <div id="txtCodigoPairing" style="font-size: 22px; font-weight: 800; letter-spacing: 4px; color: #34d399; font-family: var(--mono); margin: 6px 0;">----</div>
+              <div style="font-size: 10.5px; color: #cbd5e1; text-align: left; line-height: 1.5; margin-top: 8px;">
+                1. Abre <strong>WhatsApp</strong> en tu celular.<br>
+                2. <strong>Ajustes / Menú</strong> ➔ <strong>Dispositivos vinculados</strong>.<br>
+                3. Toca <strong>Vincular un dispositivo</strong>.<br>
+                4. Abajo, toca <strong>«Vincular con el número de teléfono»</strong>.<br>
+                5. Escribe este código y ¡listo!
+              </div>
+            </div>
           </div>
 
           <div style="margin-top: 12px; width: 100%; text-align: left; background: #090a0f; border: 1px solid #232938; padding: 10px; border-radius: 6px;">
@@ -2261,6 +2287,62 @@
         alert('Restablecido a http://localhost:3000');
       }
       actualizarEstadoWA();
+    }
+
+    async function forzarRefrescoQR() {
+      const puenteUrl = getPuenteWAUrl();
+      const badge = document.getElementById('waBadgeStatus');
+      const placeholder = document.getElementById('waQrPlaceholder');
+      const img = document.getElementById('waQrImg');
+      
+      badge.className = 'badge-status badge-amber';
+      badge.innerText = '🔄 Generando código QR fresco...';
+      img.style.display = 'none';
+      placeholder.style.display = 'block';
+      placeholder.innerHTML = '⏳ Conectando con WhatsApp para generar nuevo código limpio...';
+
+      try {
+        await fetch(`${puenteUrl}/api/refrescar-qr`);
+        setTimeout(actualizarEstadoWA, 2000);
+      } catch (e) {
+        alert('Error al refrescar QR: ' + e.message);
+      }
+    }
+
+    async function pedirCodigoPairing() {
+      const input = document.getElementById('txtNumeroPairing');
+      const tel = (input?.value || '').trim();
+      if (!tel) {
+        return alert('Ingresa tu número de teléfono de WhatsApp (ej. 0983123456 o 595983123456)');
+      }
+
+      const box = document.getElementById('boxCodigoPairing');
+      const txt = document.getElementById('txtCodigoPairing');
+      box.style.display = 'block';
+      txt.innerText = 'CARGANDO...';
+      txt.style.color = '#94a3b8';
+
+      try {
+        const puenteUrl = getPuenteWAUrl();
+        const res = await fetch(`${puenteUrl}/api/pairing-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefono: tel })
+        });
+        const data = await res.json();
+        if (data.ok && data.codigo) {
+          txt.innerText = data.codigo;
+          txt.style.color = '#34d399';
+        } else {
+          txt.innerText = 'ERROR';
+          txt.style.color = '#f87171';
+          alert(data.error || 'No se pudo generar el código. Intenta de nuevo.');
+        }
+      } catch (err) {
+        txt.innerText = 'ERROR';
+        txt.style.color = '#f87171';
+        alert('Error de conexión con el bot: ' + err.message);
+      }
     }
 
     async function actualizarEstadoWA() {

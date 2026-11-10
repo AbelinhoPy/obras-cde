@@ -75,32 +75,131 @@ async function limpiarSesionEnDB() {
 // 2. Estado Global
 let qrCodeRaw = null;
 let qrCodeDataURL = null;
+let qrTimestamp = null;
 let sock = null;
 let usuarioConectado = null;
 let estadoConexion = 'iniciando'; // 'iniciando', 'esperando_qr', 'conectado', 'cerrado'
 let historialEventos = [];
+let reiniciandoSocket = false;
+
+// Reiniciar socket limpiamente
+async function resetearSocket(limpiarCredenciales = false) {
+  if (reiniciandoSocket) return;
+  reiniciandoSocket = true;
+  try {
+    if (sock) {
+      try {
+        sock.ev?.removeAllListeners();
+        sock.end?.(undefined);
+      } catch (e) {}
+      sock = null;
+    }
+    if (limpiarCredenciales && !usuarioConectado) {
+      try {
+        if (fs.existsSync(AUTH_DIR)) {
+          fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+        }
+      } catch (e) {}
+    }
+    qrCodeRaw = null;
+    qrCodeDataURL = null;
+    qrTimestamp = null;
+    estadoConexion = 'esperando_qr';
+    await iniciarWhatsApp();
+  } catch (err) {
+    console.error('Error al resetear socket:', err.message);
+  } finally {
+    reiniciandoSocket = false;
+  }
+}
 
 // 3. Servidor Web Local para ver el QR y Estado (Puerto 3000)
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 200;
+    return res.end();
+  }
 
   // Endpoint de ping / anti-hibernación (para Render 24/7)
   if (req.url === '/api/ping' || req.url === '/ping') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify({ ok: true, bot: 'despierto_24_7', hora: new Date().toISOString() }));
   }
 
+  // Forzar regeneración fresca de QR
+  if (req.url === '/api/refrescar-qr') {
+    res.setHeader('Content-Type', 'application/json');
+    if (!usuarioConectado) {
+      resetearSocket(true);
+      return res.end(JSON.stringify({ ok: true, mensaje: 'Regenerando código QR limpio...' }));
+    } else {
+      return res.end(JSON.stringify({ ok: true, mensaje: 'Ya conectado', estado: 'conectado' }));
+    }
+  }
+
+  // Vincular por código de 8 dígitos (Pairing Code) sin necesidad de cámara
+  if (req.url === '/api/pairing-code' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { telefono } = JSON.parse(body);
+        let num = (telefono || '').replace(/[^0-9]/g, '');
+        if (num.startsWith('09')) {
+          num = '595' + num.substring(1);
+        } else if (num.startsWith('9') && num.length === 9) {
+          num = '595' + num;
+        }
+        if (!num || num.length < 9) {
+          res.statusCode = 400;
+          res.setHeader('Content-Type', 'application/json');
+          return res.end(JSON.stringify({ error: 'Número inválido. Ejemplo: 0983123456 o 595983123456' }));
+        }
+
+        if (!sock) {
+          await resetearSocket(true);
+          await new Promise(r => setTimeout(r, 1500));
+        }
+
+        if (usuarioConectado) {
+          res.setHeader('Content-Type', 'application/json');
+          return res.end(JSON.stringify({ ok: false, error: 'El dispositivo ya está vinculado y activo.' }));
+        }
+
+        const codigo = await sock.requestPairingCode(num);
+        console.log(`🔑 Código de vinculación generado para ${num}: ${codigo}`);
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ ok: true, codigo }));
+      } catch (e) {
+        console.error('Error generando pairing code:', e.message);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+
   // API para consultar estado y QR desde el frontend del sistema web
   if (req.url === '/api/estado-qr' || req.url === '/api/estado') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    // Si el QR tiene más de 45 segundos sin escanearse y no está conectado, auto-resetear para que no quede pegado
+    if (qrTimestamp && (Date.now() - qrTimestamp > 45000) && !usuarioConectado) {
+      console.log('⏰ QR expirado (>45s). Auto-refrescando socket para mantenerlo fresco...');
+      qrCodeDataURL = null;
+      qrTimestamp = null;
+      resetearSocket(true);
+    }
+
+    const segundosRestantes = qrTimestamp ? Math.max(0, Math.round((45000 - (Date.now() - qrTimestamp)) / 1000)) : 0;
+
     res.setHeader('Content-Type', 'application/json');
-    if (req.method === 'OPTIONS') return res.end();
     return res.end(JSON.stringify({
       estado: estadoConexion,
       qrDataURL: qrCodeDataURL,
+      qrSegundosRestantes: segundosRestantes,
       usuario: usuarioConectado ? {
         id: (usuarioConectado.id || '').split(':')[0],
         name: usuarioConectado.name || 'WhatsApp Business'
@@ -653,12 +752,18 @@ async function iniciarWhatsApp() {
     sock = makeWASocket({
       auth: state,
       logger: pino({ level: 'silent' }),
-      printQRInTerminal: false
+      printQRInTerminal: false,
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 60000,
+      keepAliveIntervalMs: 25000,
+      browser: ['Obras CDE Cloud', 'Chrome', '124.0.0']
     });
 
     sock.ev.on('creds.update', async () => {
       await saveCreds();
-      await respaldarSesionHaciaDB();
+      if (sock?.authState?.creds?.me) {
+        await respaldarSesionHaciaDB();
+      }
     });
 
     sock.ev.on('connection.update', async (update) => {
@@ -667,34 +772,46 @@ async function iniciarWhatsApp() {
       if (qr) {
         qrCodeRaw = qr;
         qrCodeDataURL = await QRCode.toDataURL(qr, { scale: 8 });
+        qrTimestamp = Date.now();
         estadoConexion = 'esperando_qr';
 
         console.log('\n========================================================');
-        console.log('📲 CÓDIGO QR GENERADO. ESCANÉALO CON TU WHATSAPP:');
-        console.log('👉 O abre http://localhost:3000 para verlo en pantalla');
+        console.log(`📲 NUEVO CÓDIGO QR GENERADO (${new Date().toLocaleTimeString('es-PY')})`);
         console.log('========================================================\n');
-        qrcodeTerminal.generate(qr, { small: true });
       }
 
       if (connection === 'close') {
         const statusCode = (lastDisconnect?.error)?.output?.statusCode;
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-        console.log(`⚠️ Conexión cerrada (Código: ${statusCode}). Reconectando: ${shouldReconnect}`);
-        estadoConexion = 'cerrado';
-        if (shouldReconnect) {
-          setTimeout(iniciarWhatsApp, 3000);
-        } else {
+        console.log(`⚠️ Conexión cerrada (Código: ${statusCode}).`);
+        qrCodeRaw = null;
+        qrCodeDataURL = null;
+        qrTimestamp = null;
+
+        if (!usuarioConectado) {
           estadoConexion = 'esperando_qr';
+          setTimeout(() => resetearSocket(true), 3000);
+        } else {
+          estadoConexion = 'cerrado';
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+          if (shouldReconnect) {
+            setTimeout(() => resetearSocket(false), 3000);
+          } else {
+            usuarioConectado = null;
+            await limpiarSesionEnDB();
+            setTimeout(() => resetearSocket(true), 2000);
+          }
         }
       } else if (connection === 'open') {
         estadoConexion = 'conectado';
         usuarioConectado = sock.user;
+        qrCodeRaw = null;
+        qrCodeDataURL = null;
+        qrTimestamp = null;
         const num = (usuarioConectado?.id || '').split(':')[0];
         console.log('\n========================================================');
-        console.log(`🎉 ¡WHATSAPP CONECTADO CON ÉXITO!`);
-        console.log(`📱 Número activo: +${num}`);
-        console.log(`💻 Monitor web en vivo: http://localhost:3000`);
+        console.log(`🎉 ¡WHATSAPP CONECTADO CON ÉXITO! (+${num})`);
         console.log('========================================================\n');
+        await respaldarSesionHaciaDB();
       }
     });
 
