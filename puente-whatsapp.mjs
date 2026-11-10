@@ -846,7 +846,7 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
       const matchGs = texto.match(/(\d[\d\.\,]*)/);
       if (matchMil) monto = parseInt(matchMil[1]) * 1000;
       else if (matchGs && parseInt(matchGs[1].replace(/\./g, '')) > 1000) monto = parseInt(matchGs[1].replace(/\./g, ''));
-      resp = `Anotado, registré el gasto de ferretería por ${monto > 0 ? monto.toLocaleString('es-PY') + ' Gs.' : 'el monto indicado'}.`;
+      resp = `Anotado, registré el gasto de ferretería por ${monto > 0 ? monto.toLocaleString('es-PY') + ' Gs' : 'el monto indicado'}.`;
     } else {
       categoria = 'incidencia';
       resp = 'Listo, ya guardé la novedad en el cuaderno de la obra.';
