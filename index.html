@@ -374,6 +374,9 @@
 
       <div class="nav-label">Canales & Integración</div>
       <button class="nav-btn" onclick="verTab('whatsapp')">📲 Vincular WhatsApp (QR)</button>
+
+      <div class="nav-label">Ayuda & Guía</div>
+      <button class="nav-btn" onclick="verTab('manual')">📖 Manual de Uso (Ingeniero)</button>
     </div>
 
     <div class="sidebar-footer" style="flex-direction: column; align-items: flex-start; gap: 8px;">
@@ -385,8 +388,8 @@
         <button class="btn btn-outline btn-xs" onclick="cargarTodo()" title="Recargar">↻</button>
       </div>
       <div style="width: 100%; padding-top: 6px; border-top: 1px solid #1e2433;">
-        <a href="http://localhost:3000" target="_blank" style="color: #10b981; font-size: 11px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px;">
-          <span>📲 Vincular WhatsApp (QR) ↗</span>
+        <a href="https://obras-cde.onrender.com" target="_blank" style="color: #10b981; font-size: 11px; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+          <span>📲 Servidor Bot Cloud (24/7) ↗</span>
         </a>
       </div>
     </div>
@@ -798,9 +801,43 @@
           </div>
 
           <div style="margin-top: 14px; display: flex; gap: 8px; width: 100%;">
-            <button class="btn btn-default btn-xs" style="flex: 1;" onclick="actualizarEstadoWA()">↻ Refrescar QR</button>
+            <button class="btn btn-default btn-xs" style="flex: 1;" onclick="forzarRefrescoQR()">↻ Forzar Nuevo QR</button>
             <button class="btn btn-danger btn-xs" id="btnDesvincularWA" style="display: none;" onclick="desvincularWA()">Desvincular</button>
           </div>
+
+          <!-- ALTERNATIVA: VINCULAR POR CODIGO DE 8 DIGITOS (PAIRING CODE) -->
+          <div style="margin-top: 14px; border-top: 1px solid #232938; padding-top: 14px; width: 100%; text-align: left;">
+            <div style="font-size: 11.5px; font-weight: 700; color: #38bdf8; margin-bottom: 4px;">
+              📲 ¿Problemas con la cámara?
+            </div>
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">
+              Vincula directo con un <strong>Código de 8 dígitos</strong> sin escanear:
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="txtNumeroPairing" class="form-ctrl" placeholder="ej. 0983123456" style="font-size: 11.5px; font-family: var(--mono); padding: 5px 8px; width: 100%;">
+              <button class="btn btn-primary btn-xs" style="white-space: nowrap;" onclick="pedirCodigoPairing()">Pedir Código</button>
+            </div>
+            
+            <div id="boxCodigoPairing" style="display: none; margin-top: 10px; background: #090a0f; border: 1px solid #10b981; border-radius: 6px; padding: 12px; text-align: center;">
+              <div style="font-size: 10.5px; color: #94a3b8;">Tu código para WhatsApp:</div>
+              <div id="txtCodigoPairing" style="font-size: 22px; font-weight: 800; letter-spacing: 4px; color: #34d399; font-family: var(--mono); margin: 6px 0;">----</div>
+              <div style="font-size: 10.5px; color: #cbd5e1; text-align: left; line-height: 1.5; margin-top: 8px;">
+                1. Abre <strong>WhatsApp</strong> en tu celular.<br>
+                2. <strong>Ajustes / Menú</strong> ➔ <strong>Dispositivos vinculados</strong>.<br>
+                3. Toca <strong>Vincular un dispositivo</strong>.<br>
+                4. Abajo, toca <strong>«Vincular con el número de teléfono»</strong>.<br>
+                5. Escribe este código y ¡listo!
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px; width: 100%; text-align: left; background: #090a0f; border: 1px solid #232938; padding: 10px; border-radius: 6px;">
+            <label style="font-size: 10.5px; color: #94a3b8; display: block; margin-bottom: 4px; font-weight: 600;">Dirección del Servidor Bot (Local o Railway 24/7):</label>
+            <div style="display: flex; gap: 4px;">
+              <input type="text" id="txtPuenteUrl" class="form-ctrl" style="font-size: 11px; padding: 5px 8px; font-family: var(--mono); width: 100%;" placeholder="https://obras-cde.onrender.com">
+              <button class="btn btn-default btn-xs" onclick="guardarPuenteUrl()">Guardar</button>
+            </div>
+            <span style="font-size: 9.5px; color: #64748b; margin-top: 3px; display: block;">Permite conectar la web con tu servidor 24/7 en Railway o tu PC local.</span>
         </div>
 
         <!-- TARJETA DE ESTADO, DISPOSITIVO Y SIMULADOR -->
@@ -874,6 +911,194 @@
             </table>
           </div>
 
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 10. VISTA MANUAL DEL INGENIERO -->
+    <section id="tab-manual" class="view-content">
+      <div style="display: flex; flex-direction: column; gap: 20px; max-width: 1050px; margin: 0 auto;">
+        
+        <!-- ENCABEZADO DE BIENVENIDA -->
+        <div class="table-card" style="padding: 24px; background: linear-gradient(135deg, #111827 0%, #1e293b 100%); border-left: 4px solid #3b82f6;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <span style="display: inline-block; padding: 3px 10px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Guía Práctica Oficial</span>
+              <h2 style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 6px;">Cuaderno Digital de Obra y Liquidación Semanal</h2>
+              <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; max-width: 700px;">
+                Ingeniero, este sistema está hecho para simplificarle la vida en el día a día de las obras en Ciudad del Este y Alto Paraná. Sin papeleos perdidos, sin cálculos manuales de vales y con su liquidación del sábado lista en un solo clic.
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="window.print()" style="display: flex; align-items: center; gap: 6px;">
+              <span>🖨️ Imprimir / Guardar PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PASO 0: COMO LLEVARLO EN EL CELULAR COMO APP -->
+        <div class="table-card" style="padding: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">0</div>
+            <div>
+              <h3 style="font-size: 15px; margin: 0;">¿Cómo tener el sistema como un ícono en su teléfono celular?</h3>
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">Para abrirlo todos los días con un solo toque como cualquier aplicación</p>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 16px; border-radius: 8px;">
+              <strong style="color: #38bdf8; font-size: 13px; display: block; margin-bottom: 8px;">📱 En teléfonos Android (Samsung, Xiaomi, Motorola):</strong>
+              <ol style="padding-left: 20px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+                <li>Abra el enlace del sistema en el navegador <strong>Google Chrome</strong>.</li>
+                <li>Toque los <strong>3 puntitos verticales</strong> arriba a la derecha.</li>
+                <li>Elija la opción <strong>"Agregar a la pantalla principal"</strong> o <strong>"Instalar aplicación"</strong>.</li>
+                <li>Listo: Le aparecerá el ícono de <strong>"Obras CDE"</strong> en la pantalla de su teléfono.</li>
+              </ol>
+            </div>
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 16px; border-radius: 8px;">
+              <strong style="color: #a78bfa; font-size: 13px; display: block; margin-bottom: 8px;">🍏 En teléfonos iPhone (Apple):</strong>
+              <ol style="padding-left: 20px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+                <li>Abra el enlace en el navegador <strong>Safari</strong>.</li>
+                <li>Toque el botón de <strong>Compartir</strong> (el cuadrito con la flecha hacia arriba abajo al centro).</li>
+                <li>Baje un poco y seleccione <strong>"Agregar al inicio"</strong>.</li>
+                <li>Toque <strong>"Agregar"</strong> arriba a la derecha. Ya tiene la app lista.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASOS 1 A 6: CARGA Y OPERATORIA -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px;">
+          
+          <!-- TARJETA: OBRAS Y GENTE -->
+          <div class="table-card" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">1</div>
+              <h4 style="margin: 0; font-size: 14px; color: #fff;">Cargar Obras y Personales</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              Lo primero para arrancar es anotar qué obras tiene activas y quiénes son sus muchachos.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li><strong>Frente de Obras:</strong> Toque <em>"+ Nueva Obra"</em>, ponga el nombre (ej. <em>Edificio San José Km 7</em>) y la ubicación.</li>
+              <li><strong>Funcionarios:</strong> Toque <em>"+ Nuevo Funcionario"</em>, cargue el nombre (ej. <em>Esteban Giménez</em>), su jornal diario en Guaraníes (ej. <em>130.000 Gs.</em>) y elija a qué obras asiste (puede marcar varias si rota de una a otra).</li>
+            </ul>
+          </div>
+
+          <!-- TARJETA: VALES Y ADELANTOS -->
+          <div class="table-card" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">2</div>
+              <h4 style="margin: 0; font-size: 14px; color: #fff;">Vales y Adelantos Semanales</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              Cuando un oficial le pide 100.000 Gs. o 150.000 Gs. a mitad de semana, ya no confíe en la memoria ni en un papelito suelto.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li>Vaya a <strong>"Vales & Anticipos"</strong> y toque <em>"+ Registrar Vale"</em>.</li>
+              <li>Elija al personal, cargue el monto y la obra.</li>
+              <li><strong>¡O envíelo por WhatsApp!:</strong> Solo mande un mensaje que diga: <em>"Vale de 150 mil para Esteban Giménez"</em> y el sistema lo asienta automáticamente.</li>
+            </ul>
+          </div>
+
+          <!-- TARJETA: BOBCAT -->
+          <div class="table-card" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #6366f1; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">3</div>
+              <h4 style="margin: 0; font-size: 14px; color: #fff;">Bobcat y Horómetro de Ramón</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              Lleve el control exacto de las horas de máquina y la tarifa pactada.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li>Toque <em>"+ Agendar Servicio"</em> con el cliente y lugar.</li>
+              <li>Cuando Ramón termina la faena, anote el <strong>horómetro inicial y final</strong>.</li>
+              <li>El sistema calcula solo: <em>(Horas trabajadas × 250.000 Gs.) + 250.000 Gs. de flete</em> y lo suma directo a sus ingresos.</li>
+            </ul>
+          </div>
+
+          <!-- TARJETA: CEMENTO Y MATERIALES -->
+          <div class="table-card" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #06b6d4; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">4</div>
+              <h4 style="margin: 0; font-size: 14px; color: #fff;">Llegada de Materiales</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              Controle cada camión o flete que descarga en la obra.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li>En <strong>"Materiales & Cargas"</strong> toque <em>"+ Registrar Carga"</em>.</li>
+              <li>Anote la remisión (ej. <em>REM-4412</em>), la cantidad de bolsas de cemento, arena o varillas, y la obra de destino.</li>
+              <li>Así nunca habrá dudas de si el material se entregó completo o faltó algo.</li>
+            </ul>
+          </div>
+
+          <!-- TARJETA: BITACORA DE CAMPO -->
+          <div class="table-card" style="padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #ec4899; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">5</div>
+              <h4 style="margin: 0; font-size: 14px; color: #fff;">Bitácora de Campo (Lluvias y Notas)</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              El respaldo que todo ingeniero necesita ante cualquier reclamo de atraso de los dueños.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li>Anote días de lluvia donde se paró el hormigón.</li>
+              <li>Compras urgentes de ferretería (discos de corte, alambre, clavos).</li>
+              <li>Recordatorios como <em>"Falta sacar foto al encadenado antes de tapar"</em>.</li>
+            </ul>
+          </div>
+
+          <!-- TARJETA: EL SABADO DE PAGO -->
+          <div class="table-card" style="padding: 20px; border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.03);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <div style="width: 28px; height: 28px; border-radius: 6px; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">6</div>
+              <h4 style="margin: 0; font-size: 14px; color: #34d399;">El Sábado de Pago (Cero Errores)</h4>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 12px;">
+              Llegó el sábado a mediodía para pagar a la gente:
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.7;">
+              <li>Vaya a <strong>"Contabilidad & Balance"</strong>.</li>
+              <li>El sistema ya sumó los jornales de cada hombre, restó los vales que sacó en la semana y le muestra exactamente el <strong>efectivo neto en Guaraníes</strong> a entregarle.</li>
+              <li>Toque <strong>"Exportar Planilla (.csv)"</strong> para abrirla en Excel o compartirla.</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- COMO USAR EL WHATSAPP -->
+        <div class="table-card" style="padding: 24px;">
+          <h3 style="font-size: 16px; margin-bottom: 4px; color: #fff;">📲 ¿Cómo registrar cosas directamente por WhatsApp?</h3>
+          <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">
+            No hace falta abrir la computadora en la obra. Solo mande un mensaje normal al WhatsApp conectado como si le hablara a su secretaria:
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 14px; border-radius: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #f59e0b; text-transform: uppercase;">Para Vales de Personal</span>
+              <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #fff;">💬 "Vale de 150 mil para Esteban Giménez"</div>
+              <p style="margin-top: 4px; font-size: 11.5px; color: #94a3b8;">El sistema reconoce el nombre y el monto, y lo descuenta para el sábado.</p>
+            </div>
+
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 14px; border-radius: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Para Lluvias e Incidencias</span>
+              <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #fff;">💬 "Llovió mucho hoy en Km 7, paramos la losa"</div>
+              <p style="margin-top: 4px; font-size: 11.5px; color: #94a3b8;">Queda asentado en la Bitácora de Campo con fecha y hora.</p>
+            </div>
+
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 14px; border-radius: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #ec4899; text-transform: uppercase;">Para Compras de Ferretería</span>
+              <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #fff;">💬 "Se compró alambre y clavos en ferretería por 85 mil"</div>
+              <p style="margin-top: 4px; font-size: 11.5px; color: #94a3b8;">Se archiva como gasto de obra con el valor exacto.</p>
+            </div>
+
+            <div style="background: #090a0f; border: 1px solid #232938; padding: 14px; border-radius: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase;">Para Horas de la Bobcat</span>
+              <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #fff;">💬 "Ramón completó 5 horas en Km 10"</div>
+              <p style="margin-top: 4px; font-size: 11.5px; color: #94a3b8;">Calcula el cobro del servicio y suma el flete de traslado.</p>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -1166,7 +1391,8 @@
         bitacora: ['Bitácora & Cuaderno de Campo', 'Registro de incidencias, clima/lluvias, fotos pendientes y compras de ferretería'],
         contabilidad: ['Contabilidad & Balance', 'Estado de ingresos, egresos y exportación de planillas'],
         agenda: ['Agenda del Ingeniero', 'Resumen diario consolidado para despacho y WhatsApp'],
-        whatsapp: ['Conexión WhatsApp Business', 'Vinculación directa por Código QR y monitor de actividad en tiempo real']
+        whatsapp: ['Conexión WhatsApp Business', 'Vinculación directa por Código QR y monitor de actividad en tiempo real'],
+        manual: ['Manual de Uso para el Ingeniero', 'Guía práctica paso a paso para el control diario en obra, pagos de sábado y WhatsApp']
       };
       if (titulos[nombre]) {
         document.getElementById('topTitulo').innerText = titulos[nombre][0];
@@ -2044,9 +2270,87 @@
     }
 
     // ==================== INTEGRACIÓN WHATSAPP QR ====================
-    async function actualizarEstadoWA() {
+    function getPuenteWAUrl() {
+      const custom = localStorage.getItem('WA_PUENTE_URL');
+      if (custom && custom.trim()) return custom.trim().replace(/\/$/, '');
+      return 'https://obras-cde.onrender.com';
+    }
+
+    function guardarPuenteUrl() {
+      const input = document.getElementById('txtPuenteUrl');
+      const val = (input?.value || '').trim();
+      if (val) {
+        localStorage.setItem('WA_PUENTE_URL', val);
+        alert('URL del Bot guardada: ' + val);
+      } else {
+        localStorage.removeItem('WA_PUENTE_URL');
+        alert('Restablecido a http://localhost:3000');
+      }
+      actualizarEstadoWA();
+    }
+
+    async function forzarRefrescoQR() {
+      const puenteUrl = getPuenteWAUrl();
+      const badge = document.getElementById('waBadgeStatus');
+      const placeholder = document.getElementById('waQrPlaceholder');
+      const img = document.getElementById('waQrImg');
+      
+      badge.className = 'badge-status badge-amber';
+      badge.innerText = '🔄 Generando código QR fresco...';
+      img.style.display = 'none';
+      placeholder.style.display = 'block';
+      placeholder.innerHTML = '⏳ Conectando con WhatsApp para generar nuevo código limpio...';
+
       try {
-        const res = await fetch('http://localhost:3000/api/estado-qr');
+        await fetch(`${puenteUrl}/api/refrescar-qr`);
+        setTimeout(actualizarEstadoWA, 2000);
+      } catch (e) {
+        alert('Error al refrescar QR: ' + e.message);
+      }
+    }
+
+    async function pedirCodigoPairing() {
+      const input = document.getElementById('txtNumeroPairing');
+      const tel = (input?.value || '').trim();
+      if (!tel) {
+        return alert('Ingresa tu número de teléfono de WhatsApp (ej. 0983123456 o 595983123456)');
+      }
+
+      const box = document.getElementById('boxCodigoPairing');
+      const txt = document.getElementById('txtCodigoPairing');
+      box.style.display = 'block';
+      txt.innerText = 'CARGANDO...';
+      txt.style.color = '#94a3b8';
+
+      try {
+        const puenteUrl = getPuenteWAUrl();
+        const res = await fetch(`${puenteUrl}/api/pairing-code`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telefono: tel })
+        });
+        const data = await res.json();
+        if (data.ok && data.codigo) {
+          txt.innerText = data.codigo;
+          txt.style.color = '#34d399';
+        } else {
+          txt.innerText = 'ERROR';
+          txt.style.color = '#f87171';
+          alert(data.error || 'No se pudo generar el código. Intenta de nuevo.');
+        }
+      } catch (err) {
+        txt.innerText = 'ERROR';
+        txt.style.color = '#f87171';
+        alert('Error de conexión con el bot: ' + err.message);
+      }
+    }
+
+    async function actualizarEstadoWA() {
+      const puenteUrl = getPuenteWAUrl();
+      const txtInput = document.getElementById('txtPuenteUrl');
+      if (txtInput && !txtInput.value) txtInput.value = puenteUrl;
+      try {
+        const res = await fetch(`${puenteUrl}/api/estado-qr`);
         if (!res.ok) throw new Error('Servidor QR no responde');
         const data = await res.json();
 
@@ -2093,7 +2397,7 @@
           placeholder.innerHTML = `
             <span style="color:#fbbf24; font-weight:600;">Puente local desconectado</span><br>
             <span style="font-size:10.5px; color:#94a3b8;">Ejecuta <code>node puente-whatsapp.mjs</code> en tu terminal para generar el código QR.</span><br><br>
-            <a href="http://localhost:3000" target="_blank" class="btn btn-default btn-xs" style="margin-top:6px;">Abrir localhost:3000 ↗</a>
+            <a href="${puenteUrl}" target="_blank" class="btn btn-default btn-xs" style="margin-top:6px;">Abrir Servidor ↗</a>
           `;
         }
       }
@@ -2109,7 +2413,7 @@
       divRes.innerHTML = 'Procesando mensaje...';
 
       try {
-        const res = await fetch('http://localhost:3000/api/simular', {
+        const res = await fetch(`${getPuenteWAUrl()}/api/simular`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ texto: txt, remitente: 'Simulador Dashboard' })
@@ -2134,7 +2438,7 @@
     async function desvincularWA() {
       if (!confirm('¿Deseas desvincular el WhatsApp actual?')) return;
       try {
-        await fetch('http://localhost:3000/api/desvincular', { method: 'POST' });
+        await fetch(`${getPuenteWAUrl()}/api/desvincular`, { method: 'POST' });
         actualizarEstadoWA();
       } catch (e) {
         alert('Error al desvincular: ' + e.message);
