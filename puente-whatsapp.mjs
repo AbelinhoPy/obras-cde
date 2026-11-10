@@ -691,14 +691,18 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     }
 
     if (sql && personalId) {
-      await sql`
-        INSERT INTO asistencias_vales (personal_id, obra_id, fecha, estado, vale_adelanto, observacion)
-        VALUES (${personalId}, 1, CURRENT_DATE, 'presente', ${monto}, ${'WhatsApp: ' + textoOriginal})
-      `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || remitenteId}, 'asistencia_vale', ${textoOriginal}, ${'Vale anotado: ' + monto.toLocaleString('es-PY') + ' Gs. para ' + personalNombre})
-      `;
+      try {
+        await sql`
+          INSERT INTO asistencias_vales (personal_id, obra_id, fecha, estado, vale_adelanto, observacion)
+          VALUES (${personalId}, (SELECT id FROM obras ORDER BY id ASC LIMIT 1), CURRENT_DATE, 'presente', ${monto}, ${'WhatsApp: ' + textoOriginal})
+        `;
+        await sql`
+          INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+          VALUES (${remitenteNombre || remitenteId}, 'asistencia_vale', ${textoOriginal}, ${'Vale anotado: ' + monto.toLocaleString('es-PY') + ' Gs. para ' + personalNombre})
+        `;
+      } catch (e) {
+        console.warn('Aviso guardando vale en DB:', e.message);
+      }
     }
 
     resultado = {
@@ -730,14 +734,18 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     const total = (horas * tarifaHora) + flete;
 
     if (sql) {
-      await sql`
-        INSERT INTO bobcat_servicios (cliente, telefono_cliente, zona_destino, fecha_servicio, horas_pactadas, tarifa_hora, costo_traslado, total_facturado, estado)
-        VALUES (${remitenteNombre || 'Cliente WhatsApp'}, ${remitenteId.replace(/[^0-9]/g, '')}, ${zona}, ${new Date().toISOString()}, ${horas}, ${tarifaHora}, ${flete}, ${total}, 'agendado')
-      `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || remitenteId}, 'reserva_bobcat', ${textoOriginal}, ${'Bobcat agendada en ' + zona + ' (' + horas + ' hs)'})
-      `;
+      try {
+        await sql`
+          INSERT INTO bobcat_servicios (cliente, telefono_cliente, zona_destino, fecha_servicio, horas_pactadas, tarifa_hora, costo_traslado, total_facturado, estado)
+          VALUES (${remitenteNombre || 'Cliente WhatsApp'}, ${remitenteId.replace(/[^0-9]/g, '')}, ${zona}, ${new Date().toISOString()}, ${horas}, ${tarifaHora}, ${flete}, ${total}, 'agendado')
+        `;
+        await sql`
+          INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+          VALUES (${remitenteNombre || remitenteId}, 'reserva_bobcat', ${textoOriginal}, ${'Bobcat agendada en ' + zona + ' (' + horas + ' hs)'})
+        `;
+      } catch (e) {
+        console.warn('Aviso guardando bobcat en DB:', e.message);
+      }
     }
 
     resultado = {
@@ -760,15 +768,19 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     const total = (horasReales * 250000) + 250000;
 
     if (sql) {
-      await sql`
-        UPDATE bobcat_servicios
-        SET horas_reales = ${horasReales}, total_facturado = ${total}, estado = 'finalizado_cobrado', notas_operador = ${'Cierre por WhatsApp: ' + textoOriginal}
-        WHERE id = (SELECT id FROM bobcat_servicios WHERE estado = 'agendado' ORDER BY id ASC LIMIT 1)
-      `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || 'Operador Ramón'}, 'horas_ramon', ${textoOriginal}, ${'Ramón cerró ' + horasReales + ' hs. Total cobrado: ' + total.toLocaleString('es-PY') + ' Gs.'})
-      `;
+      try {
+        await sql`
+          UPDATE bobcat_servicios
+          SET horas_reales = ${horasReales}, total_facturado = ${total}, estado = 'finalizado_cobrado', notas_operador = ${'Cierre por WhatsApp: ' + textoOriginal}
+          WHERE id = (SELECT id FROM bobcat_servicios WHERE estado = 'agendado' ORDER BY id ASC LIMIT 1)
+        `;
+        await sql`
+          INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+          VALUES (${remitenteNombre || 'Operador Ramón'}, 'horas_ramon', ${textoOriginal}, ${'Ramón cerró ' + horasReales + ' hs. Total cobrado: ' + total.toLocaleString('es-PY') + ' Gs.'})
+        `;
+      } catch (e) {
+        console.warn('Aviso actualizando horas ramon en DB:', e.message);
+      }
     }
 
     resultado = {
@@ -794,14 +806,18 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     if (matchCant) cantidad = matchCant[0];
 
     if (sql) {
-      await sql`
-        INSERT INTO materiales (obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion, estado)
-        VALUES (1, ${material}, ${cantidad}, 'Distribuidora Alto Paraná', NOW(), ${remitenteNombre || 'Encargado'}, 'recibido')
-      `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || remitenteId}, 'material_recepcion', ${textoOriginal}, ${'Recepción confirmada: ' + cantidad + ' de ' + material})
-      `;
+      try {
+        await sql`
+          INSERT INTO materiales (obra_id, material, cantidad, proveedor, fecha_entrega, responsable_recepcion, estado)
+          VALUES ((SELECT id FROM obras ORDER BY id ASC LIMIT 1), ${material}, ${cantidad}, 'Distribuidora Alto Paraná', NOW(), ${remitenteNombre || 'Encargado'}, 'recibido')
+        `;
+        await sql`
+          INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+          VALUES (${remitenteNombre || remitenteId}, 'material_recepcion', ${textoOriginal}, ${'Recepción confirmada: ' + cantidad + ' de ' + material})
+        `;
+      } catch (e) {
+        console.warn('Aviso guardando material en DB:', e.message);
+      }
     }
 
     resultado = {
@@ -837,14 +853,18 @@ async function procesarMensaje(textoOriginal, remitenteId, remitenteNombre) {
     }
 
     if (sql) {
-      await sql`
-        INSERT INTO bitacora_obras (obra_id, categoria, nota, autor, monto_imprevisto)
-        VALUES (1, ${categoria}, ${textoOriginal}, ${remitenteNombre || 'WhatsApp'}, ${monto})
-      `;
-      await sql`
-        INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
-        VALUES (${remitenteNombre || remitenteId}, 'nota_bitacora', ${textoOriginal}, ${'Bitácora (' + categoria + '): ' + textoOriginal.substring(0, 40)})
-      `;
+      try {
+        await sql`
+          INSERT INTO bitacora_obras (obra_id, categoria, nota, autor, monto_imprevisto)
+          VALUES ((SELECT id FROM obras ORDER BY id ASC LIMIT 1), ${categoria}, ${textoOriginal}, ${remitenteNombre || 'WhatsApp'}, ${monto})
+        `;
+        await sql`
+          INSERT INTO actividad_whatsapp (remitente, tipo_evento, mensaje_original, resumen_accion)
+          VALUES (${remitenteNombre || remitenteId}, 'nota_bitacora', ${textoOriginal}, ${'Bitácora (' + categoria + '): ' + textoOriginal.substring(0, 40)})
+        `;
+      } catch (e) {
+        console.warn('Aviso guardando bitácora en DB:', e.message);
+      }
     }
 
     resultado = {
